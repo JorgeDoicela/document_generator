@@ -1,0 +1,28 @@
+# ==============================================================================
+# Git Attributes: Manejo consistente de fin de línea y binarios
+# ==============================================================================
+
+# Por defecto, normalizar saltos de línea a LF en checkout/commit
+* text=auto eol=lf
+
+# Scripts ejecutables y de configuración
+*.sh text eol=lf
+.githooks/* text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+Makefile text eol=lf
+tareas text eol=lf
+
+# Archivos binarios que no deben ser modificados por filtros de texto
+*.docx binary
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.zip binary

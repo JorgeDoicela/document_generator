@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Git Pre-commit Hook: Protección contra fuga de datos sensibles y .env
+# ==============================================================================
+set -euo pipefail
+
+# 1. Comprobar que .env nunca esté en staging
+STAGED_FILES=$(git diff --cached --name-only)
+
+if echo "$STAGED_FILES" | grep -E '(^|/)\.env$' >/dev/null 2>&1; then
+    echo "======================================================================" >&2
+    echo "[ERROR DE SEGURIDAD] Se intentó hacer commit del archivo .env." >&2
+    echo "El archivo .env contiene datos personales y credenciales privadas." >&2
+    echo "Por favor sácalo del área de stage ejecutando:" >&2
+    echo "  git reset HEAD .env" >&2
+    echo "======================================================================" >&2
+    exit 1
+fi
+
+# 2. Proteger el workspace privado (materias/* excepto .gitkeep) y temas locales privados
+PRIVATE_STAGED=$(echo "$STAGED_FILES" | grep -E '^(materias/[^.]|materias/\.[^g]|themes/local/)' || true)
+if [ -n "$PRIVATE_STAGED" ]; then
+    echo "======================================================================" >&2
+    echo "[ERROR DE PRIVACIDAD] Se intentó hacer commit de archivos privados" >&2
+    echo "dentro de materias/ o themes/local/:" >&2
+    echo "$PRIVATE_STAGED" >&2
+    echo "Solo materias/.gitkeep puede versionarse en el repositorio público." >&2
+    echo "======================================================================" >&2
+    exit 1
+fi
+
+# 3. Análisis estático de credenciales en diff staged (excluyendo el propio hook)
+BLOCKED_PATTERNS='(ghp_[0-9a-zA-Z]{36}|BEGIN (RSA|OPENSSH) PRIVATE KEY|token_personal)'
+if git diff --cached -- ':!.githooks/*' | grep -E "$BLOCKED_PATTERNS" >/dev/null 2>&1; then
+    echo "======================================================================" >&2
+    echo "[ERROR DE SEGURIDAD] Se detectaron posibles credenciales o claves privadas" >&2
+    echo "en los cambios a ser confirmados." >&2
+    echo "======================================================================" >&2
+    exit 1
+fi
+
+exit 0

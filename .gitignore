@@ -1,0 +1,58 @@
+# Lista blanca: se versiona el framework documental, ejemplos, tests,
+# documentación técnica y configuración de agentes. Los deberes personales
+# en materias/, los temas locales privados y .env permanecen fuera de Git.
+/*
+!/.gitignore
+!/README.md
+!/CONTRIBUTING.md
+!/AGENTS.md
+!/.env.example
+!/requirements.txt
+!/LICENSE
+!/plantillas/
+!/tests/
+!/examples/
+!/themes/
+!/.github/
+!/.agents/
+!/materias/
+!/setup.sh
+!/setup.bat
+!/setup.ps1
+!/tareas
+!/tareas.bat
+!/tareas.ps1
+!/Makefile
+!/.vscode/
+!/.githooks/
+!/.gitattributes
+!/.editorconfig
+!/pyproject.toml
+!/docs/
+!/tools/
+
+# Workspace privado del estudiante: se conserva la carpeta vacía mediante .gitkeep
+materias/*
+!materias/.gitkeep
+
+# Temas institucionales privados (logos/banners con marca propia del usuario)
+themes/local/
+
+# Salidas generadas al ejecutar los ejemplos reproducibles
+examples/**/*.docx
+examples/**/*.pdf
+
+# Herramientas externas opcionales descargadas localmente
+tools/pseint/
+
+# Artefactos de Python y copias de seguridad de `tareas.py esqueleto --forzar`
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+*.py.bak
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db

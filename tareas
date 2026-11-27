@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Wrapper CLI para document_generator (rubric-driven)
+# Permite invocar `tareas` directamente desde la raíz del proyecto.
+# ==============================================================================
+set -euo pipefail
+
+AQUI="$(cd "$(dirname "$0")" && pwd)"
+PYTHON_VENV="$AQUI/.venv/bin/python"
+
+if [ ! -x "$PYTHON_VENV" ]; then
+    echo "[!] No se encontró el entorno virtual en .venv/."
+    echo "[*] Ejecutando ./setup.sh para inicializar el entorno..."
+    "$AQUI/setup.sh"
+fi
+
+exec "$PYTHON_VENV" "$AQUI/plantillas/tareas.py" "$@"

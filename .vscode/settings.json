@@ -1,0 +1,25 @@
+{
+  "python.terminal.activateEnvironment": true,
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/*.py.bak": true,
+    "**/.DS_Store": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true,
+    "**/*.egg-info": true,
+    "**/.pytest_cache": true
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "tareas": "tareas.bat, tareas.ps1",
+    "setup.sh": "setup.bat, setup.ps1",
+    "pyproject.toml": "requirements.txt",
+    ".env.example": ".env",
+    ".gitignore": ".gitattributes, .editorconfig"
+  },
+  "editor.formatOnSave": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true
+}
