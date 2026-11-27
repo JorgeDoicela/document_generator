@@ -76,13 +76,16 @@ El software está desacoplado en componentes con responsabilidades bien delimita
 |---|---|---|
 | `tareas.py` | Despachador CLI ligero y registro de subcomandos. | `main()`, entrypoint `tareas` |
 | `cli/comandos_gestion.py` | Controladores de ciclo de vida del repositorio. | `cmd_verificar()`, `cmd_materia()`, `cmd_tarea()`, `cmd_marcar()` |
-| `cli/comandos_documentales.py` | Controladores del pipeline de generación y rúbricas. | `cmd_rubrica()`, `cmd_esqueleto()`, `cmd_generar()`, `cmd_comprobar()`, `cmd_auditar()` |
+| `cli/comandos_documentales.py` | Controladores del pipeline de generación, compilación Markdown y rúbricas. | `cmd_rubrica()`, `cmd_esqueleto()`, `cmd_generar()`, `cmd_compilar()`, `cmd_comprobar()`, `cmd_auditar()` |
+| `cli/comandos_temas.py` | Controladores de gestión de temas documentales, vistas previas y catálogo de estilos. | `cmd_temas()`, `cmd_estilos()` |
 | `cli/servicio_pdf.py` | Aislamiento de procesos LibreOffice headless y conversión. | `convertir_a_pdf()`, `localizar_soffice()` |
 | `cli/tablas.py` | Visualización tabular y estado agregado de tareas. | `cmd_estado()` |
 | `motor_base.py` | Protocolo base abstracto y catálogo de motores documentales. | `BaseDocumentEngine`, `registrar_motor()`, `obtener_motor()`, `marcar_elemento()` |
-| `apa_docx.py` | Motor de maquetación bajo el estándar formal APA 7 (`MotorAPA7`). | `nuevo_documento()`, `Bibliografia` |
+| `apa_docx.py` | Motor de maquetación bajo el estándar formal APA 7 (`MotorAPA7`) y citación multi-estilo. | `nuevo_documento()`, `Bibliografia` |
 | `formato_institucional.py` | Motor configurable por temas JSON (`MotorInstitucional`). | `nuevo_documento_tematico()`, `titulo_seccion()`, `marcar_transversal()` |
-| `temas.py` / `extractor_tema.py` | Presets documentales, carga JSON (`themes/` y `themes/local/`) y extracción automática desde `.docx`. | `cargar_tema()`, `listar_temas()`, `extraer_tema_desde_docx()` |
+| `markdown_docx.py` | Compilador declarativo de Markdown + YAML frontmatter hacia WordML (`.docx`). | `compilar_markdown()`, `extraer_frontmatter()` |
+| `temas.py` / `extractor_tema.py` | Preset base `apa7`, carga JSON (`themes/` y `themes/local/`) y extracción automática desde `.docx`. | `cargar_tema()`, `listar_temas()`, `extraer_tema_desde_docx()` |
+| `preview_tema.py` | Generación de vistas previas de temas y catálogo visual comparativo de estilos. | `generar_preview_tema()`, `generar_catalogo_estilos()`, `obtener_catalogo_estilos()` |
 | `omml.py` / `bloques.py` | Ecuaciones matemáticas OMML vectoriales y componentes editoriales universales. | `formula_bloque()`, `parrafo_estructurado()`, `enunciado_formal()`, `tabla_academica()` |
 | `rubrica.py` | Extracción de rúbricas desde DOCX, normalización y cálculo de pesos. | `leer()`, `importar_docx()`, `escribir()` |
 | `esqueleto.py` | Generación de plantillas de código ponderadas según rúbrica. | `generar_esqueleto()` |

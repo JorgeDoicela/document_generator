@@ -37,19 +37,17 @@ from pathlib import Path
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import extractor_tema
     import plataforma
-    import preview_tema
-    import temas as temas_mod
     from cli import comandos_documentales as doc_cmds
     from cli import comandos_gestion as gestion_cmds
+    from cli import comandos_temas as temas_cmds
     from cli import servicio_pdf, tablas
     from config import RAIZ
 else:
-    from . import extractor_tema, plataforma, preview_tema
-    from . import temas as temas_mod
+    from . import plataforma
     from .cli import comandos_documentales as doc_cmds
     from .cli import comandos_gestion as gestion_cmds
+    from .cli import comandos_temas as temas_cmds
     from .cli import servicio_pdf, tablas
     from .config import RAIZ
 
@@ -169,99 +167,14 @@ def cmd_estado(args) -> None:
     tablas.cmd_estado(args, MATERIAS)
 
 
-def _exportar_preview_pdf(rutas: list[Path], *, conservar_docx: bool) -> None:
-    """Convierte documentos de vista previa a PDF y limpia los .docx temporales por defecto."""
-    fallos = servicio_pdf.convertir_pdf(rutas, RAIZ)
-    if fallos:
-        sys.exit(1)
-    if not conservar_docx:
-        for docx_tmp in rutas:
-            if docx_tmp.with_suffix(".pdf").is_file():
-                docx_tmp.unlink(missing_ok=True)
-
-
 def cmd_temas(args) -> None:
     """Lista los temas documentales, crea un molde, extrae desde .docx o genera vista previa."""
-    if getattr(args, "preview", None):
-        try:
-            rutas = preview_tema.generar_previews(
-                args.preview,
-                salida=getattr(args, "salida", None),
-                estilo_citas=getattr(args, "citas", None),
-            )
-        except (FileNotFoundError, ValueError) as exc:
-            sys.exit(f"Error al generar vista previa: {exc}")
-        if not rutas:
-            print("No hay temas personalizados en themes/ o themes/local/ para previsualizar.")
-            print("Para ver apa7 y todos los estilos disponibles ejecuta: ./tareas estilos --catalogo")
-            return
-        if getattr(args, "sin_pdf", False):
-            for r in rutas:
-                print(f"Vista previa DOCX: {ruta_relativa(r)}")
-            return
-        conservar = getattr(args, "salida", None) is not None
-        _exportar_preview_pdf(rutas, conservar_docx=conservar)
-        for r in rutas:
-            print(f"Vista previa PDF: {ruta_relativa(r.with_suffix('.pdf'))}")
-        return
-
-    if args.extraer:
-        try:
-            res = extractor_tema.extraer_tema_desde_docx(
-                args.extraer,
-                nombre=args.nombre,
-                privado=not args.compartido,
-            )
-        except (FileNotFoundError, ValueError) as exc:
-            sys.exit(f"Error al extraer tema: {exc}")
-        print(f"Tema extraído: {res.tema.nombre} -> {ruta_relativa(res.ruta_json)}")
-        for det in res.detalles:
-            print(f"  - {det}")
-        print(f"  Úsalo en tus documentos con: tema={res.tema.nombre!r}")
-        return
-
-    if args.crear:
-        slug = re.sub(r"[^a-z0-9_-]+", "-", args.crear.strip().lower()).strip("-")
-        if not slug:
-            sys.exit("Nombre de tema no válido.")
-        base_dir = temas_mod.DIR_TEMAS_LOCALES if args.local else temas_mod.DIR_TEMAS
-        archivo = temas_mod.exportar_molde_tema(base_dir / slug, nombre=slug, base=args.base)
-        print(f"Molde de tema creado: {ruta_relativa(archivo)}")
-        print("  Edita colores, fuente y rutas opcionales a logo/banner/membrete.")
-        return
-
-    print(f"{'Tema':<16} {'Fuente':<18} {'Tablas':<8} Descripción")
-    print("-" * 88)
-    for nombre in temas_mod.listar_temas():
-        t = temas_mod.cargar_tema(nombre)
-        print(f"{t.nombre:<16} {t.fuente:<18} {t.estilo_tabla:<8} {t.descripcion}")
+    temas_cmds.cmd_temas(args, RAIZ, ruta_relativa)
 
 
 def cmd_estilos(args) -> None:
     """Muestra todos los estilos elegibles por elemento o genera un muestrario visual (.docx/.pdf)."""
-    if getattr(args, "catalogo", False):
-        try:
-            ruta = preview_tema.generar_catalogo_estilos(
-                tema=getattr(args, "tema", None) or "apa7",
-                salida=getattr(args, "salida", None),
-            )
-        except (FileNotFoundError, ValueError) as exc:
-            sys.exit(f"Error al generar catálogo de estilos: {exc}")
-        if getattr(args, "sin_pdf", False):
-            print(f"Catálogo visual DOCX: {ruta_relativa(ruta)}")
-            return
-        conservar = getattr(args, "salida", None) is not None
-        _exportar_preview_pdf([ruta], conservar_docx=conservar)
-        print(f"Catálogo visual PDF: {ruta_relativa(ruta.with_suffix('.pdf'))}")
-        return
-
-    for grupo in preview_tema.obtener_catalogo_estilos():
-        print(f"\n[{grupo['elemento']}]")
-        print(f"  Dónde se elige: {grupo['config']}")
-        for clave, desc in grupo["opciones"]:
-            print(f"    - {clave:<14} {desc}")
-    print("\nPara ver una comparativa visual real en PDF ejecuta:")
-    print("  ./tareas estilos --catalogo")
+    temas_cmds.cmd_estilos(args, RAIZ, ruta_relativa)
 
 
 def convertir_pdf(documentos: list) -> int:

@@ -1172,8 +1172,13 @@ class MotorAPA7:
     def configurar_pagina(self, doc, **kwargs):
         _estilos(doc)
         sec = doc.sections[0]
+        sec.page_width = Inches(8.5)
+        sec.page_height = Inches(11.0)
         sec.top_margin = sec.bottom_margin = Inches(1)
         sec.left_margin = sec.right_margin = Inches(1)
+        sec.header_distance = Inches(0.5)
+        sec.footer_distance = Inches(0.5)
+        sec.different_first_page_header_footer = False
         _numero_de_pagina(sec)
         return doc
 

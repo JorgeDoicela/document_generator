@@ -3,13 +3,13 @@
 ifeq ($(OS),Windows_NT)
   PYTHON := .venv/Scripts/python.exe
   RUFF := .venv/Scripts/ruff.exe
-  MYPY := .venv/Scripts/mypy.exe
-  TAREAS := cmd /C tareas.bat
-  SETUP := cmd /C setup.bat
+  MYPY := $(PYTHON) -m mypy
+  TAREAS := $(PYTHON) plantillas/tareas.py
+  SETUP := bash setup.sh
 else
   PYTHON := .venv/bin/python
   RUFF := .venv/bin/ruff
-  MYPY := .venv/bin/mypy
+  MYPY := $(PYTHON) -m mypy
   TAREAS := ./tareas
   SETUP := ./setup.sh
 endif

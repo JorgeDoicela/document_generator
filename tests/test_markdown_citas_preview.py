@@ -152,9 +152,11 @@ class TestCompiladorMarkdown(unittest.TestCase):
         md = (
             "---\n"
             'titulo: "Documento de Prueba"\n'
-            "tema: tecnico\n"
+            "tema: apa7\n"
             "indice: true\n"
             "palabras_clave: [Python, OpenXML]\n"
+            "enlaces:\n"
+            "  - https://ejemplo.org/doc\n"
             "referencias:\n"
             "  - clave: ref1\n"
             '    autores: ["Pérez, J."]\n'
@@ -166,12 +168,36 @@ class TestCompiladorMarkdown(unittest.TestCase):
         )
         meta, cuerpo = markdown_docx.extraer_frontmatter(md)
         self.assertEqual(meta["titulo"], "Documento de Prueba")
-        self.assertEqual(meta["tema"], "tecnico")
+        self.assertEqual(meta["tema"], "apa7")
         self.assertTrue(meta["indice"])
         self.assertEqual(meta["palabras_clave"], ["Python", "OpenXML"])
+        self.assertEqual(meta["enlaces"], ["https://ejemplo.org/doc"])
         self.assertEqual(len(meta["referencias"]), 1)
         self.assertEqual(meta["referencias"][0]["clave"], "ref1")
         self.assertIn("# 1. Sección {#C1}", cuerpo)
+
+    def test_compilar_markdown_minimalista_apa7_sin_env_ni_autor(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            md_path = tmp_path / "minimal.md"
+            md_path.write_text("---\ntitulo: Prueba Sin Env\n---\n\n# 1. Intro\n\nPárrafo simple.\n", encoding="utf-8")
+            with mock.patch.object(
+                markdown_docx.config, "cargar", side_effect=markdown_docx.config.ConfigError("sin .env")
+            ):
+                ruta = markdown_docx.compilar_markdown(md_path, salida=tmp_path / "minimal.docx")
+            self.assertTrue(ruta.is_file())
+            doc = Document(str(ruta))
+            self.assertAlmostEqual(doc.sections[0].page_width.inches, 8.5, places=2)
+            self.assertAlmostEqual(doc.sections[0].page_height.inches, 11.0, places=2)
+
+    def test_motor_apa7_configura_pagina_us_letter(self) -> None:
+        doc = Document()
+        motor = apa_docx.MotorAPA7()
+        motor.configurar_pagina(doc)
+        sec = doc.sections[0]
+        self.assertAlmostEqual(sec.page_width.inches, 8.5, places=2)
+        self.assertAlmostEqual(sec.page_height.inches, 11.0, places=2)
+        self.assertAlmostEqual(sec.header_distance.inches, 0.5, places=2)
 
     def test_compilar_ejemplo_declarativo_y_auditar_cero_errores(self) -> None:
         ejemplo_dir = RAIZ / "examples" / "ejemplo_markdown"

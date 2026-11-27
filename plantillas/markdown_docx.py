@@ -24,12 +24,13 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import apa_docx
     import bloques
+    import config
     import formato_institucional as fmt_inst
     import omml
     import rubrica as rub
     import temas as temas_mod
 else:
-    from . import apa_docx, bloques, omml
+    from . import apa_docx, bloques, config, omml
     from . import formato_institucional as fmt_inst
     from . import rubrica as rub
     from . import temas as temas_mod
@@ -174,10 +175,14 @@ def _parsear_yaml_simple(texto: str) -> Dict[str, Any]:
                 else:
                     items.append("")
                 continue
-            if ":" in cuerpo and not (cuerpo.startswith('"') or cuerpo.startswith("'")):
-                k, v = cuerpo.split(":", 1)
-                k = k.strip().strip('"').strip("'")
-                v = v.strip()
+            m_kv = (
+                re.match(r'^([^:"\']+?):(?:\s+(.*)|$)', cuerpo)
+                if not (cuerpo.startswith('"') or cuerpo.startswith("'") or "://" in cuerpo.split(" ", 1)[0])
+                else None
+            )
+            if m_kv:
+                k = m_kv.group(1).strip().strip('"').strip("'")
+                v = (m_kv.group(2) or "").strip()
                 obj: Dict[str, Any] = {}
                 if v == "":
                     if idx < len(lineas) and lineas[idx][0] > indent + 1:
@@ -328,27 +333,39 @@ def _crear_documento_base(
     tema_obj = temas_mod.cargar_tema(tema_nombre)
 
     if tema_obj.nombre == "apa7":
-        try:
-            doc, _, _ = apa_docx.nuevo_documento(
-                titulo=titulo_doc,
-                materia=materia or "Documento Académico",
-                salida=ruta_salida,
-                fecha=fecha,
-                docente=docente,
-                tarea=tarea,
-                carpeta_capturas=str(carpeta_capturas),
-                nombre=str(integrantes) if isinstance(integrantes, str) else None,
-                institucion=str(institucion) if institucion else "Institución",
-                carrera=str(carrera) if carrera else "",
-                indice=incluir_indice,
-                modalidad=str(modalidad) if modalidad else None,
-                grupo=str(grupo) if grupo else None,
-                integrantes=integrantes,
-                formato="apa7",
-            )
-            return doc, tema_obj
-        except Exception:
-            pass
+        cfg_env: Dict[str, str] = {}
+        if not integrantes or not institucion:
+            try:
+                cfg_env = dict(config.cargar())
+            except config.ConfigError:
+                cfg_env = {}
+
+        nombre_apa = (
+            str(integrantes)
+            if isinstance(integrantes, str)
+            else (cfg_env.get("NOMBRE_ESTUDIANTE") or "Autor" if not integrantes else None)
+        )
+        inst_apa = str(institucion) if institucion else (cfg_env.get("INSTITUCION") or "Institución")
+        carrera_apa = str(carrera) if carrera else cfg_env.get("CARRERA", "")
+
+        doc, _, _ = apa_docx.nuevo_documento(
+            titulo=titulo_doc,
+            materia=materia or "Documento Académico",
+            salida=ruta_salida,
+            fecha=fecha,
+            docente=docente,
+            tarea=tarea,
+            carpeta_capturas=str(carpeta_capturas),
+            nombre=nombre_apa,
+            institucion=inst_apa,
+            carrera=carrera_apa,
+            indice=incluir_indice,
+            modalidad=str(modalidad) if modalidad else None,
+            grupo=str(grupo) if grupo else None,
+            integrantes=integrantes,
+            formato="apa7",
+        )
+        return doc, tema_obj
 
     doc = fmt_inst.nuevo_documento_tematico(
         titulo=titulo_doc,
@@ -390,7 +407,7 @@ def compilar_markdown(
         estilo_citas
         or meta.get("estilo_citas")
         or meta.get("citas")
-        or ("ieee" if tema_final.lower() == "ieee" else "apa7")
+        or "apa7"
     ).strip()
 
     if salida is not None:

@@ -1,11 +1,12 @@
 # Especificación del CLI `tareas`
 
-El punto de entrada unificado de la herramienta es el despachador de línea de comandos `tareas` (entrypoint en `plantillas/tareas.py`, invocado mediante `./tareas` en Linux/macOS, `tareas.bat` en Windows o el comando de terminal `tareas` si el paquete editable está activo en el entorno virtual).
+El punto de entrada unificado de la herramienta es el despachador de línea de comandos `tareas` (entrypoint en `plantillas/tareas.py`, invocado mediante `./tareas` en Linux/macOS, `.venv\Scripts\python.exe plantillas\tareas.py` en Windows o el comando de terminal `tareas` si el paquete editable está activo en el entorno virtual).
 
 ### Arquitectura Interna del CLI
 La lógica interna del CLI se encuentra desacoplada en controladores de dominio bajo `plantillas/cli/`:
 * `plantillas/cli/comandos_gestion.py`: Subcomandos administrativos (`verificar`, `materia`, `tarea`, `marcar`).
-* `plantillas/cli/comandos_documentales.py`: Subcomandos de compilación e inspección (`rubrica`, `esqueleto`, `generar`, `comprobar`, `auditar`).
+* `plantillas/cli/comandos_documentales.py`: Subcomandos de compilación e inspección (`rubrica`, `esqueleto`, `generar`, `compilar`, `comprobar`, `auditar`).
+* `plantillas/cli/comandos_temas.py`: Subcomandos de identidad visual y catálogo de estilos (`temas`, `estilos`).
 * `plantillas/cli/servicio_pdf.py`: Servicio aislado de conversión a PDF con LibreOffice headless y gestión de timeouts/cuotas de disco.
 * `plantillas/cli/tablas.py`: Renderizado y formateo de la tabla de avance (`estado`).
 * `plantillas/tareas.py`: Despachador ligero y definidor del árbol de argumentos con `argparse`.
