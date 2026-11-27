@@ -35,10 +35,11 @@ renderizar_terminal(
 ## 2. Bloques de Código Fuente en WordML (`bloque_codigo_word`)
 
 Permite insertar fragmentos de código fuente estructurado en el lienzo de WordML con apariencia de editor moderno:
-* Cabecera con icono, nombre del archivo y etiqueta de lenguaje.
+* Cabecera con icono, nombre del archivo y etiqueta de lenguaje (`keep_with_next = True`).
+* Protección contra cortes de página entre cabecera y código mediante `w:cantSplit` en ambas filas.
 * Columna de numeración de líneas alineada a la derecha con separador vertical.
 * Respeto de fuentes monoespaciadas (`Consolas` / `Inconsolata`) con espaciado compacto (1.05 líneas).
-* Paleta adaptativa en modos claro y oscuro.
+* Paleta adaptativa en modos claro (`Temas.LIGHT`) y oscuro (`Temas.DARK`). Para inspeccionar visualmente todas las variantes de tablas, terminales y código en un único documento, ejecutar `./tareas estilos --catalogo`.
 
 ```python
 from plantillas.visual import Temas, bloque_codigo_word

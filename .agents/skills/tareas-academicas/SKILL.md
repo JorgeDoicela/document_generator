@@ -37,11 +37,12 @@ Antes de redactar cualquier sección de una tarea:
 El manejo de referencias es un pilar innegociable de la integridad académica:
 
 1. **Cero Citas Fantasma:** Toda cita en el texto debe contar con su correspondiente entrada bibliográfica completa y verificable.
-2. **Uso del Gestor Bibliográfico:** En scripts de generación (`generar_documento.py`), registrar cada fuente mediante `bib.agregar(...)` y citar estrictamente con `bib.cita("clave")` o `bib.cita_narrativa("clave")`.
-3. **Estructura Estricta APA 7:**
+2. **Uso del Gestor Bibliográfico:** En scripts de generación (`generar_documento.py`), registrar cada fuente mediante `bib.agregar(...)` y citar estrictamente con `bib.cita("clave")` o `bib.cita_narrativa("clave")` (en `apa7` por defecto, o `estilo="ieee"` / `estilo="vancouver"` cuando la asignatura lo requiera). En documentos declarativos (`documento.md`), declarar las fuentes en `referencias:` y citar con `[@clave]` o `@clave`.
+3. **Estructura Estricta APA 7 (y Soporte Multi-Estilo):**
    * **Libro:** Autor, A. A. (Año). *Título de la obra*. Editorial.
    * **Artículo:** Autor, A. A., & Autor, B. B. (Año). Título del artículo. *Nombre de la Revista*, volumen(número), páginas. https://doi.org/xxxx
    * **Norma/Estándar:** Organización. (Año). *Título del estándar* (Norma No. XXX). Enlace o editorial.
+   * Para revisar todas las variantes de formato disponibles (tablas `apa`/`grid`, código `light`/`dark`, citas y temas), consultar `./tareas estilos [--catalogo]`.
 4. **Integración Fluida:** Las citas deben integrarse orgánicamente en el discurso mediante citas parentéticas o narrativas, evitando acumular citas al final de párrafos sin desarrollo reflexivo propio.
 
 ---

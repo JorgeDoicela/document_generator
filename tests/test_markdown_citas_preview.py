@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """Pruebas unitarias para citación multi-estilo (APA 7, IEEE, Vancouver),
 compilador declarativo Markdown/YAML y vista previa de temas."""
+import re
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
+
+from docx import Document
 
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ / "plantillas"))
@@ -13,6 +17,7 @@ import apa_docx  # noqa: E402
 import comprobar as comp  # noqa: E402
 import markdown_docx  # noqa: E402
 import preview_tema  # noqa: E402
+import temas as temas_mod  # noqa: E402
 
 
 class TestEstilosCitacion(unittest.TestCase):
@@ -52,6 +57,20 @@ class TestEstilosCitacion(unittest.TestCase):
         self.assertEqual(bib.ordenadas(), ["zeta2024", "alfa2023"])
         self.assertTrue(bib.entrada("zeta2024").startswith("[1] M. Zeta y C. Álvarez,"))
         self.assertTrue(bib.entrada("alfa2023").startswith('[2] K. Alfa, "Análisis estático de XML,"'))
+
+    def test_apa7_no_duplica_punto_final_con_detalles_terminados_en_punto(self) -> None:
+        bib = apa_docx.Bibliografia(estilo="apa7")
+        bib.agregar(
+            "russell2021",
+            ["Russell, S.", "Norvig, P."],
+            2021,
+            "Artificial Intelligence: A Modern Approach.",
+            "Pearson",
+            detalles="4.a ed.",
+        )
+        entrada = bib.entrada("russell2021")
+        self.assertNotIn("..", entrada)
+        self.assertTrue(entrada.endswith("Pearson, 4.a ed."))
 
     def test_vancouver_numeracion_y_formato(self) -> None:
         bib = self._poblar("vancouver")
@@ -202,12 +221,66 @@ class TestPreviewTema(unittest.TestCase):
             self.assertEqual(analisis.avisos_tipograficos, [])
             self.assertGreaterEqual(len(analisis.referencias), 2)
 
-    def test_generar_previews_todos(self) -> None:
+    def test_generar_previews_todos_solo_temas_personalizados(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            rutas = preview_tema.generar_previews("todos", salida=Path(tmp))
-            self.assertGreaterEqual(len(rutas), 1)
-            for r in rutas:
-                self.assertTrue(r.is_file())
+            tmp_path = Path(tmp)
+            tdir = tmp_path / "local" / "mi_tema"
+            tdir.mkdir(parents=True)
+            (tdir / "theme.json").write_text('{"nombre": "mi_tema", "fuente": "Arial"}', encoding="utf-8")
+
+            with mock.patch.object(temas_mod, "DIR_TEMAS", tmp_path), mock.patch.object(
+                temas_mod, "DIR_TEMAS_LOCALES", tmp_path / "local"
+            ):
+                rutas = preview_tema.generar_previews("todos", salida=tmp_path / "out")
+
+            nombres = [r.name for r in rutas]
+            self.assertEqual(nombres, ["preview_mi_tema.docx"])
+            self.assertTrue(rutas[0].is_file())
+
+    def test_catalogo_estilos_lista_todas_las_categorias(self) -> None:
+        cat = preview_tema.obtener_catalogo_estilos()
+        elementos = {g["elemento"]: dict(g["opciones"]) for g in cat}
+        self.assertIn("Tablas", elementos)
+        self.assertIn("apa", elementos["Tablas"])
+        self.assertIn("grid", elementos["Tablas"])
+        self.assertIn("Citas y Referencias", elementos)
+        self.assertEqual(set(elementos["Citas y Referencias"].keys()), {"apa7", "ieee", "vancouver"})
+        self.assertIn("Tema Documental", elementos)
+        self.assertIn("apa7", elementos["Tema Documental"])
+        self.assertIn("Bloques Editoriales, OMML y Tarjetas", elementos)
+        self.assertIn("formula_bloque", elementos["Bloques Editoriales, OMML y Tarjetas"])
+
+    def test_generar_catalogo_estilos_sin_anomalias(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            salida = Path(tmp) / "catalogo.docx"
+            ruta = preview_tema.generar_catalogo_estilos(tema="apa7", salida=salida)
+            self.assertTrue(ruta.is_file())
+            analisis = comp.analizar(ruta)
+            self.assertEqual(analisis.anomalias_formato, [])
+            self.assertEqual(analisis.avisos_tipograficos, [])
+            self.assertGreaterEqual(len(analisis.secciones), 6)
+            self.assertTrue(any(s.tablas >= 1 for s in analisis.secciones))
+            doc = Document(str(ruta))
+            parrafos_txt = "\n".join(p.text for p in doc.paragraphs)
+            self.assertNotIn("`", parrafos_txt)
+            for tabla in doc.tables:
+                for fila in tabla.rows:
+                    for celda in fila.cells:
+                        self.assertIsNone(re.search(r"(?<!\.)\.\.(?!\.)", celda.text))
+            xml = doc.element.xml
+            self.assertIn("cantSplit", xml)
+            self.assertIn("keepNext", xml)
+            self.assertIn("oMathPara", xml)
+            self.assertEqual(sum(1 for _ in doc.inline_shapes), 3)
+
+    def test_carpetas_workspace_y_temas_conservan_gitkeep(self) -> None:
+        for rel in (
+            "materias/.gitkeep",
+            "themes/.gitkeep",
+            "themes/local/.gitkeep",
+            "themes/.previews/.gitkeep",
+        ):
+            self.assertTrue((RAIZ / rel).is_file(), f"Falta {rel}")
 
 
 if __name__ == "__main__":

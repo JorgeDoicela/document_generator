@@ -93,15 +93,28 @@ El motor [comprobar.py](../../plantillas/comprobar.py) detecta automáticamente 
 
 ## 3. Vista Previa Automática de Temas (`plantillas/preview_tema.py`)
 
-El módulo [preview_tema.py](../../plantillas/preview_tema.py) genera un documento de muestra estandarizado que ejercita portada, resumen ejecutivo, encabezados H1-H3, tabla de parámetros del tema, enunciado formal, ecuación OMML, bloque de código y referencias para inspección visual directa en Word o PDF.
+El módulo [preview_tema.py](../../plantillas/preview_tema.py) genera vistas previas dedicadas para validar temas personalizados (`themes/` y `themes/local/`) en portada, tipografía, tablas, OMML y código. Al exportar a PDF, el archivo `.docx` temporal se elimina automáticamente para conservar únicamente los `.pdf` limpios en `themes/.previews/`.
 
 ```bash
-# Generar vista previa (.docx y .pdf) de un tema específico en themes/.previews/
-./tareas temas --preview apa7
-./tareas temas --preview apa7 --citas ieee
+# Generar vista previa (.pdf) de un tema personalizado específico
+./tareas temas --preview mi-tema
 
-# Generar muestras para todos los temas disponibles (apa7 + locales)
-./tareas temas --preview todos --sin-pdf
+# Generar muestras para todos los temas personalizados (omite apa7 para no duplicar el catálogo)
+./tareas temas --preview todos
 ```
 
 La carpeta de salida por defecto (`themes/.previews/`) está excluida en `.gitignore` para evitar versionar artefactos temporales.
+
+---
+
+## 4. Catálogo Comparativo de Todos los Estilos (`tareas estilos`)
+
+Para consultar todas las opciones disponibles por componente (tablas `apa` vs. `grid`, terminales/código `light`/`dark`/`minimalista`, citación `apa7`/`ieee`/`vancouver`, bloques OMML/enunciados, temas documentales y portadas `individual` vs. `grupal`) y generar el muestrario visual completo en `.pdf`:
+
+```bash
+# Ver el catálogo completo en consola con dónde se configura cada opción
+./tareas estilos
+
+# Generar muestrario visual comparativo en themes/.previews/catalogo_estilos.pdf
+./tareas estilos --catalogo
+```

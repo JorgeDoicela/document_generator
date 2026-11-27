@@ -15,6 +15,7 @@ Uso (desde la raíz del repositorio):
     python plantillas/tareas.py estado [<materia>]
     python plantillas/tareas.py marcar <tarea> <pendiente|lista|entregada>
     python plantillas/tareas.py temas [--crear NOMBRE] [--extraer ARCHIVO.DOCX] [--preview TEMA|todos] [--base PRESET] [--local]
+    python plantillas/tareas.py estilos [--catalogo] [--tema TEMA] [--salida RUTA] [--sin-pdf]
 
 Ejemplos:
     python plantillas/tareas.py materia programacion-web-2 "Programación Web 2"
@@ -168,6 +169,17 @@ def cmd_estado(args) -> None:
     tablas.cmd_estado(args, MATERIAS)
 
 
+def _exportar_preview_pdf(rutas: list[Path], *, conservar_docx: bool) -> None:
+    """Convierte documentos de vista previa a PDF y limpia los .docx temporales por defecto."""
+    fallos = servicio_pdf.convertir_pdf(rutas, RAIZ)
+    if fallos:
+        sys.exit(1)
+    if not conservar_docx:
+        for docx_tmp in rutas:
+            if docx_tmp.with_suffix(".pdf").is_file():
+                docx_tmp.unlink(missing_ok=True)
+
+
 def cmd_temas(args) -> None:
     """Lista los temas documentales, crea un molde, extrae desde .docx o genera vista previa."""
     if getattr(args, "preview", None):
@@ -179,12 +191,18 @@ def cmd_temas(args) -> None:
             )
         except (FileNotFoundError, ValueError) as exc:
             sys.exit(f"Error al generar vista previa: {exc}")
+        if not rutas:
+            print("No hay temas personalizados en themes/ o themes/local/ para previsualizar.")
+            print("Para ver apa7 y todos los estilos disponibles ejecuta: ./tareas estilos --catalogo")
+            return
+        if getattr(args, "sin_pdf", False):
+            for r in rutas:
+                print(f"Vista previa DOCX: {ruta_relativa(r)}")
+            return
+        conservar = getattr(args, "salida", None) is not None
+        _exportar_preview_pdf(rutas, conservar_docx=conservar)
         for r in rutas:
-            print(f"Vista previa DOCX: {ruta_relativa(r)}")
-        if not getattr(args, "sin_pdf", False):
-            fallos = servicio_pdf.convertir_pdf(rutas, RAIZ)
-            if fallos:
-                sys.exit(1)
+            print(f"Vista previa PDF: {ruta_relativa(r.with_suffix('.pdf'))}")
         return
 
     if args.extraer:
@@ -217,6 +235,33 @@ def cmd_temas(args) -> None:
     for nombre in temas_mod.listar_temas():
         t = temas_mod.cargar_tema(nombre)
         print(f"{t.nombre:<16} {t.fuente:<18} {t.estilo_tabla:<8} {t.descripcion}")
+
+
+def cmd_estilos(args) -> None:
+    """Muestra todos los estilos elegibles por elemento o genera un muestrario visual (.docx/.pdf)."""
+    if getattr(args, "catalogo", False):
+        try:
+            ruta = preview_tema.generar_catalogo_estilos(
+                tema=getattr(args, "tema", None) or "apa7",
+                salida=getattr(args, "salida", None),
+            )
+        except (FileNotFoundError, ValueError) as exc:
+            sys.exit(f"Error al generar catálogo de estilos: {exc}")
+        if getattr(args, "sin_pdf", False):
+            print(f"Catálogo visual DOCX: {ruta_relativa(ruta)}")
+            return
+        conservar = getattr(args, "salida", None) is not None
+        _exportar_preview_pdf([ruta], conservar_docx=conservar)
+        print(f"Catálogo visual PDF: {ruta_relativa(ruta.with_suffix('.pdf'))}")
+        return
+
+    for grupo in preview_tema.obtener_catalogo_estilos():
+        print(f"\n[{grupo['elemento']}]")
+        print(f"  Dónde se elige: {grupo['config']}")
+        for clave, desc in grupo["opciones"]:
+            print(f"    - {clave:<14} {desc}")
+    print("\nPara ver una comparativa visual real en PDF ejecuta:")
+    print("  ./tareas estilos --catalogo")
 
 
 def convertir_pdf(documentos: list) -> int:
@@ -307,6 +352,12 @@ def main() -> None:
     p.add_argument("--local", action="store_true", help="crea el tema en themes/local/ (ignorado por Git)")
     p.add_argument("--compartido", action="store_true", help="al usar --extraer, guarda en themes/ en lugar de themes/local/")
 
+    p = sub.add_parser("estilos", help="lista todos los estilos elegibles o genera un catálogo visual comparativo")
+    p.add_argument("--catalogo", "--visual", action="store_true", help="genera un documento (.docx/.pdf) comparando visualmente todos los estilos")
+    p.add_argument("--tema", default="apa7", help="tema base del documento catálogo (defecto: apa7)")
+    p.add_argument("--salida", "-o", default=None, help="ruta de salida del archivo .docx catálogo")
+    p.add_argument("--sin-pdf", action="store_true", help="al usar --catalogo, genera solo .docx sin convertir a PDF")
+
     args = parser.parse_args()
     {
         "verificar": cmd_verificar,
@@ -322,6 +373,7 @@ def main() -> None:
         "estado": cmd_estado,
         "marcar": cmd_marcar,
         "temas": cmd_temas,
+        "estilos": cmd_estilos,
     }[args.accion](args)
 
 

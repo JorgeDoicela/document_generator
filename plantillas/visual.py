@@ -326,6 +326,12 @@ def bloque_codigo_word(
     tabla.alignment = WD_TABLE_ALIGNMENT.CENTER
     tabla.autofit = False
 
+    # Evitar que la cabecera y el cuerpo del bloque de código se separen entre páginas
+    for fila_blk in tabla.rows:
+        cant_split = OxmlElement("w:cantSplit")
+        cant_split.set(qn("w:val"), "true")
+        fila_blk._tr.get_or_add_trPr().append(cant_split)
+
     # Fila 1: Cabecera con nombre de archivo y lenguaje
     c_head = tabla.rows[0].cells[0]
     c_head.width = Inches(6.5)
@@ -335,6 +341,7 @@ def bloque_codigo_word(
     p_head.alignment = WD_ALIGN_PARAGRAPH.LEFT
     p_head.paragraph_format.space_before = Pt(4)
     p_head.paragraph_format.space_after = Pt(4)
+    p_head.paragraph_format.keep_with_next = True
 
     etiqueta = f"  {archivo}  [{lenguaje}]" if archivo else f"  [{lenguaje}]"
     r_h = p_head.add_run(etiqueta)

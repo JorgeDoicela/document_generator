@@ -879,13 +879,15 @@ class Bibliografia:
         partes = [f"{autores} ({f['anio']})."]
         cursiva_fuente = f["tipo"] in ("articulo", "capitulo")
         if f["titulo"]:
-            partes.append(f"{f['titulo']}." if cursiva_fuente else f"*{f['titulo']}*.")
+            tit_limpio = str(f["titulo"]).rstrip(".")
+            partes.append(f"{tit_limpio}." if cursiva_fuente else f"*{tit_limpio}*.")
         fuente = f["fuente"]
+        detalles = str(f["detalles"]).rstrip(".")
         if fuente and fuente not in f["autores"]:
-            fuente = f"*{fuente}*" if cursiva_fuente else fuente
-            partes.append(f"{fuente}, {f['detalles']}." if f["detalles"] else f"{fuente}.")
-        elif f["detalles"]:
-            partes.append(f"{f['detalles']}.")
+            fuente_fmt = f"*{fuente}*" if cursiva_fuente else fuente
+            partes.append(f"{fuente_fmt}, {detalles}." if detalles else f"{fuente_fmt.rstrip('.')}.")
+        elif detalles:
+            partes.append(f"{detalles}.")
         if f["url"]:
             partes.append(f["url"])
         return " ".join(partes)

@@ -198,7 +198,7 @@ Gestiona los temas documentales del framework (`plantillas/temas.py`, `plantilla
   - `--crear <nombre>`: Crea un archivo `theme.json` editable heredando del preset `--base` (`apa7` por defecto). Con `--local`, lo guarda en `themes/local/` (ignorado por Git).
   - `--extraer <archivo.docx>`: Analiza el OpenXML del `.docx` suministrado e infiere márgenes, tipografía, interlineado, color primario, estilo de tabla (`grid`/`apa`) e imágenes embebidas (`header`, `logo_portada`, `banner_inferior`), generando el `theme.json` en `themes/local/<slug>/` por defecto (o en `themes/<slug>/` con `--compartido`).
   - `--nombre <slug>`: Identificador explícito del tema al usar `--extraer` (si se omite, se deriva del nombre del `.docx`).
-  - `--preview <tema|todos>`: Genera un documento de muestra completo (`.docx` y `.pdf`, salvo `--sin-pdf`) en `themes/.previews/` (o en `--salida`) para validar visualmente portada, tipografía, OMML, tablas, código y referencias del tema.
+  - `--preview <tema|todos>`: Genera un documento de muestra en `.pdf` (o `.docx` con `--sin-pdf`) en `themes/.previews/` (o en `--salida`) para validar visualmente portada, tipografía, OMML, tablas, código y referencias del tema. Con `todos` previsualiza los temas personalizados sin duplicar `apa7`.
 
 ---
 
@@ -213,5 +213,23 @@ Compila cualquier archivo Markdown con frontmatter YAML a `.docx` y opcionalment
   - `--citas`: Sobrescribe el estilo de citación (`apa7`, `ieee` o `vancouver`).
   - `--sin-pdf`: Genera únicamente el `.docx` sin invocar LibreOffice.
 * **Comportamiento:** Si en la carpeta del `.md` existe un archivo `TAREA.md`, ejecuta automáticamente `comprobar()` y actualiza la cobertura de rúbrica.
+
+---
+
+### 14. `estilos`
+
+Lista en consola todos los estilos seleccionables por tipo de elemento (tablas, terminales CLI, bloques de código, citación, temas documentales y modalidad de portada) o genera un muestrario visual comparativo en `.docx` y `.pdf`.
+
+* **Sintaxis:**
+  ```bash
+  tareas estilos
+  tareas estilos --catalogo [--tema TEMA] [--salida <archivo.docx>] [--sin-pdf]
+  ```
+* **Opciones:**
+  - *(sin opciones)*: Imprime cada elemento configurable, sus valores aceptados, descripción visual y archivos/parámetros donde se selecciona.
+  - `--catalogo` (`--visual`): Compila el muestrario comparativo (`themes/.previews/catalogo_estilos.pdf`, eliminando el `.docx` temporal salvo que se use `--sin-pdf` o `--salida`) renderizando tablas `apa` vs `grid`, terminales `light` vs `dark`, tarjeta académica, bloques de código `light`/`dark`/minimalista, citas `apa7`/`ieee`/`vancouver`, bloques OMML y temas del entorno.
+  - `--tema TEMA`: Tema base aplicado al documento catálogo (`apa7` por defecto).
+  - `--salida` / `-o`: Ruta personalizada del `.docx` de salida.
+  - `--sin-pdf`: Omite la exportación a PDF con LibreOffice.
 
 

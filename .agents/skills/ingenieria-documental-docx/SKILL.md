@@ -41,7 +41,7 @@ Para garantizar rigor académico y tipografía editorial formal en ecuaciones l�
 
 2. **Uso de `formula_bloque` y Normalización LaTeX → Unicode OMML:**
    * Todas las ecuaciones deben generarse mediante `formula_bloque(doc, formula, etiqueta)` de `plantillas/omml.py` (re-exportado en `formato_institucional.py` y `apa_docx.py`).
-   * Antes de construir `<m:oMath>`, `texto_a_omml()` y `dividir_formula_larga()` invocan `normalizar_latex_a_unicode()`, traduciendo comandos LaTeX (`\forall`, `\exists`, `\land`, `\lor`, `\implies`, `\in`, `\cup`, `\times`, `\sqcap`, `\sqsubseteq`, `\text{}`, `\mathcal{}`, `\Big(`, etc.) a Unicode matemático limpio compatible con Cambria Math y LibreOffice, erradicando de raíz el renderizado de caracteres rotos (`¿`).
+   * Antes de construir `<m:oMath>`, `texto_a_omml()` y `dividir_formula_larga()` invocan `normalizar_latex_a_unicode()`, traduciendo comandos LaTeX (`\forall`, `\exists`, `\land`, `\lor`, `\implies`, `\in`, `\cup`, `\times`, `\sqcap`, `\sqsubseteq`, alfabeto griego como `\tau`, `\phi`, `\psi`, `\Sigma`, `\Omega`, `\text{}`, `\mathcal{}`, `\Big(`, etc.) a Unicode matemático limpio compatible con Cambria Math y LibreOffice, erradicando de raíz el renderizado de caracteres rotos (`¿`).
    * La función procesa automáticamente sintaxis con potencias (`2^n`, `M^e`, `R^-`), subíndices (`x_i`, `p_sub`) o XML directo de OMML.
    * **Bloqueo Estático:** `plantillas/comprobar.py` audita tanto `w:t` como `m:t` y emite un `[error]` bloqueante ante cualquier comando LaTeX crudo no normalizado.
    * La presentación editorial es limpia: párrafo centrado directamente sobre el lienzo del documento, sin cajas con marcos ni sombreados de fondo.
@@ -95,8 +95,9 @@ Toda tabla generada para informes académicos debe poseer las propiedades están
    ```
 
 3. **Estilo Visual y Anchos Fijos Proporcionales (`w:tblLayout="fixed"`):**
-   * Cabecera con fondo gris suave `#E8E8E8`, texto en negrita Arial 9.5 pt centrado y bordes discretos `#B0B0B0`.
-   * Celdas interiores con bordes suaves `#CCCCCC`, texto Arial 9.0 pt (configurable vía `tamano_cabecera` y `tamano_cuerpo` en `tabla_institucional`) e interlineado compacto.
+   * Cabecera con fondo gris suave `#E8E8E8` en modo `grid` (o fondo limpio con 3 líneas horizontales en modo `apa`), texto en negrita centrado y bordes discretos.
+   * Celdas interiores con texto compacto (`tamano_cabecera` y `tamano_cuerpo` configurables en `tabla_academica`/`tabla_estilizada`) e interlineado 1.05.
+   * **Bloques de Código sin Cortes (`bloque_codigo_word`):** Los bloques 2×1 aplican `w:cantSplit` en ambas filas y `keep_with_next = True` en la cabecera para impedir que el título del archivo quede separado del código en un salto de página.
    * **Prevención de Cortes de Palabra en LibreOffice:** `tabla_estilizada()` aplica `w:tblLayout w:type="fixed"`, `w:tblW`, `w:tblGrid/w:gridCol` y `w:tcW` explícitos en twips (`dxa`). Si no se pasan `anchos`, `_calcular_anchos_proporcionales()` calcula automáticamente el reparto según el token indivisible más largo y la longitud media por columna, evitando cortes de URIs o identificadores a mitad de palabra.
 
 ---

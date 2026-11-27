@@ -62,5 +62,5 @@ exit 0
 
 El repositorio está diseñado para operar de forma segura en modalidad **Pública (Open Source)**:
 
-1. **Aislamiento de Workspace y Datos Privados:** `.env`, `materias/*` (conservando solo `materias/.gitkeep`) y `themes/local/` permanecen ignorados en `.gitignore`.
+1. **Aislamiento de Workspace y Datos Privados:** `.env`, `materias/*`, `themes/local/*` y `themes/.previews/*` (conservando solo sus `.gitkeep`) permanecen ignorados en `.gitignore`.
 2. **Protección de Propiedad Intelectual:** Los enunciados docentes, entregables personales y logos institucionales propios nunca se versionan en el repositorio público.

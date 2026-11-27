@@ -28,7 +28,7 @@ El principio rector del sistema es determinista: los criterios de evaluación o 
 5. **Ecosistema de Agentes IA (`.agents/`):**
    - Incluye reglas (`AGENTS.md`) y 4 skills especializadas (`.agents/skills/`) para flujos asistidos por IA en análisis de consignas, rigor académico, ingeniería OpenXML y laboratorios técnicos.
 6. **Privacidad por Diseño:**
-   - El workspace personal del usuario (`materias/*`, conservando `materias/.gitkeep`), los temas privados (`themes/local/`), las vistas previas (`themes/.previews/`) y `.env` están excluidos de Git por defecto.
+   - El workspace personal del usuario (`materias/*`), los temas privados (`themes/local/*`) y las vistas previas (`themes/.previews/*`) conservan únicamente sus archivos `.gitkeep` en Git y su contenido queda excluido junto con `.env` por defecto.
 
 ---
 
@@ -114,6 +114,7 @@ El comando `--extraer` analiza el OpenXML del documento de referencia y genera `
 |---|---|
 | `./tareas verificar` | Comprueba entorno (`.venv`, dependencias, `.env`, LibreOffice y Git). |
 | `./tareas temas [--crear NOMBRE] [--extraer DOCX] [--preview TEMA\|todos]` | Lista presets/temas, crea un molde `theme.json`, extrae formato desde un `.docx` o genera vista previa visual. |
+| `./tareas estilos [--catalogo] [--tema TEMA] [--sin-pdf]` | Lista todos los estilos elegibles (tablas, terminales, código, citas, temas y portadas) o genera su muestrario visual en PDF. |
 | `./tareas compilar <archivo.md> [--tema TEMA] [--citas apa7\|ieee\|vancouver] [--sin-pdf]` | Compila un documento declarativo Markdown/YAML a `.docx` y `.pdf` (auditando contra `TAREA.md` si existe). |
 | `./tareas materia <carpeta> "<Nombre>"` | Crea una nueva materia dentro de `materias/` (workspace local ignorado por Git). |
 | `./tareas tarea <materia> <código> "<Título>" [--grupal] [--formato TEMA]` | Inicializa una tarea con su estructura (`TAREA.md`, `enunciado/`, `capturas/`). |
@@ -171,7 +172,7 @@ La arquitectura interna, contratos del CLI, motores documentales y guías de inf
 
 ## Seguridad, Privacidad y Contribuciones
 
-- `.env`, `materias/*` (excepto `materias/.gitkeep`) y `themes/local/` están excluidos en `.gitignore` y protegidos por `.githooks/pre-commit`.
+- `.env`, `materias/*`, `themes/local/*` y `themes/.previews/*` (conservando solo sus `.gitkeep`) están excluidos en `.gitignore` y protegidos por `.githooks/pre-commit`.
 - La copia automática de PDFs a la carpeta Descargas del sistema está **desactivada por defecto** (`COPIAR_PDF_DESCARGAS=false`); actívala explícitamente en tu `.env` si la necesitas.
 - Consulta [CONTRIBUTING.md](CONTRIBUTING.md) para contribuir mejoras, nuevos presets o motores.
 

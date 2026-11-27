@@ -10,14 +10,15 @@ El documento generado mediante `nuevo_documento()` configura los parámetros del
 
 | Parámetro | Valor APA 7 | Implementación en `apa_docx.py` |
 |---|---|---|
-| Tipografía del Cuerpo | Times New Roman | `Normal.font.name = "Times New Roman"` |
+| Tamaño de Papel | US Letter (8.5" × 11") | `sec.page_width = Inches(8.5)`, `sec.page_height = Inches(11.0)` |
+| Tipografía del Cuerpo | Times New Roman | `Normal.font.name = "Times New Roman"` (`w:rFonts` en los 4 alfabetos) |
 | Tamaño de Fuente | 12 pt | `Normal.font.size = Pt(12)` |
 | Color del Texto | Automático / Monocromático | `Normal.font.color.rgb = RGBColor(0, 0, 0)` |
 | Interlineado | Doble (2.0) | `Normal.paragraph_format.line_spacing = 2.0` |
-| Espaciado entre Párrafos | 0 pt antes, 0 pt después | `space_before = Pt(0)`, `space_after = Pt(0)` |
+| Espaciado entre Párrafos | 0 pt antes, 0 pt después | `space_before = Pt(0)`, `space_after = Pt(0)`, `widow_control = True` |
 | Sangría de Primera Línea | 0.5 pulgadas (1.27 cm) | `first_line_indent = Inches(0.5)` |
-| Márgenes de Página | 1 pulgada (2.54 cm) en los 4 lados | `top_margin = Inches(1.0)`, etc. |
-| Numeración de Página | Esquina superior derecha | Campo `PAGE` en encabezado derecho (`w:fldChar`) |
+| Márgenes de Página | 1 pulgada (2.54 cm) en los 4 lados | `top_margin = Inches(1.0)`, `header_distance = Inches(0.5)` |
+| Numeración de Página | Esquina superior derecha continua | Campo `PAGE` en encabezado derecho en Times New Roman 12 pt (`w:fldChar`) |
 
 ---
 
@@ -49,7 +50,7 @@ El parámetro `criterios="C1"` (o lista `criterios=["C1", "C2"]`) inserta los ma
 
 ## 3. Gestor Bibliográfico (`Bibliografia`)
 
-La clase `Bibliografia` gestiona las fuentes académicas, previene citas huérfanas y formatea la sección final conforme a APA 7.
+La clase `Bibliografia` gestiona las fuentes académicas en estilo **APA 7** por defecto (`estilo="apa7"`), además de soportar **IEEE numérico** (`estilo="ieee"`, `[1]`) y **Vancouver** (`estilo="vancouver"`, `(1)`), previniendo citas huérfanas y normalizando la puntuación final para evitar doble punto (p. ej. tras `"4.a ed."`).
 
 ```mermaid
 flowchart LR

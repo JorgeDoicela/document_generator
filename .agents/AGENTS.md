@@ -75,13 +75,15 @@ Cuando el usuario pida "haz la tarea materias/<materia>/<carpeta>" (o similar):
    `transversal(...)`, ni `criterios=` de `referencias(...)`: son lo que la
    comprobación usa. Si se añade una sección para un criterio, marcarla igual.
    Citar con `bib.cita("clave")` / `bib.cita_narrativa("clave")` tras
-   `bib.agregar(...)`; nunca escribir citas a mano sin su referencia.
+   `bib.agregar(...)` (`apa7`, `ieee` o `vancouver`); nunca escribir citas a mano sin su referencia.
+   (Alternativamente, si la tarea usa flujo declarativo `documento.md`, conservar `# Título {#C1}` y `transversales: [...]` y compilar con `tareas generar <tarea> --desde-md` o `tareas compilar <archivo.md>`).
 7. `tareas generar <tarea>`: genera el `.docx`, lo comprueba contra la rúbrica,
    rellena "Dónde se cumple" en `TAREA.md` y genera el PDF. **Corregir todos
    los `[error]`** y revisar los `[aviso]` (secciones poco desarrolladas según
    su peso, extensión, referencias sin citar). Si algún criterio no se puede
    cubrir (p. ej. faltan capturas que solo el usuario puede hacer), decírselo
    al usuario; no rellenarlo con contenido inventado.
+   Para consultar todas las variantes editoriales disponibles (tablas `apa`/`grid`, terminales/código `light`/`dark`, citas y temas), ejecutar `./tareas estilos [--catalogo]`.
 8. **Auditoría Visual Obligatoria del PDF (antes de marcar `lista`):** Renderizar
    las páginas críticas del PDF (diagramas, tablas con URIs/código y ecuaciones
    OMML) a PNG con `pymupdf` e inspeccionarlas visualmente para garantizar cero
@@ -111,8 +113,8 @@ Cuando el usuario pida "haz la tarea materias/<materia>/<carpeta>" (o similar):
   - **Grupal:** `grupo_<numero>_<actividad>_<numero>.pdf` (ej. `grupo_1_clase_practica_3.pdf`, `grupo_1_tarea_practica_3.pdf`).
   - **Exportación a Descargas (Opt-in):** La copia automática a la carpeta Descargas del sistema solo se ejecuta si el usuario habilita `COPIAR_PDF_DESCARGAS=true` en su `.env` local (desactivada por defecto para seguridad de terceros).
 - **Aislamiento de Tests:** Los tests unitarios jamás deben copiar archivos temporales a Descargas.
-- **Privacidad del Workspace:** El repositorio público versiona únicamente el framework, ejemplos, pruebas y documentación. `materias/*` (conservando `materias/.gitkeep`), `themes/local/` y `.env` permanecen ignorados en `.gitignore` y nunca deben versionarse.
-- **Motores y Temas Configurables:** Usar `apa_docx` para APA 7 o `formato_institucional` (`nuevo_documento_tematico(..., tema="academico|tecnico|ejecutivo|ieee|<ruta_json>")`) junto con los núcleos `omml.py` y `bloques.py`. Consultar presets con `./tareas temas`.
+- **Privacidad del Workspace:** El repositorio público versiona únicamente el framework, ejemplos, pruebas y documentación. `materias/*`, `themes/local/*` y `themes/.previews/*` (conservando solo sus `.gitkeep`) junto con `.env` permanecen ignorados en `.gitignore` y nunca deben versionarse.
+- **Motores y Temas Configurables:** Usar `apa_docx` para el estándar oficial `apa7` (US Letter, Times New Roman 12 pt, numeración superior derecha en Times New Roman 12 pt, `widow_control=True`) o `formato_institucional` (`nuevo_documento_tematico(..., tema="apa7|<nombre_o_ruta_theme_json>")`) junto con `omml.py` y `bloques.py`. Para redacción sin Python usar `markdown_docx` (`tareas compilar <archivo.md>` o `tareas generar <tarea> --desde-md`). Consultar opciones con `./tareas temas` y `./tareas estilos [--catalogo]`.
 - **Extracción Automática de Formato desde `.docx`:** Si el usuario entrega un `.docx` oficial (guía docente o plantilla institucional/corporativa) cuyo formato aún no existe en `themes/local/`, ejecutar `./tareas temas --extraer <archivo.docx> --nombre <slug>` para extraer automáticamente tipografía, márgenes, paleta de colores e imágenes (`theme.json`) en `themes/local/<slug>/` antes de generar el documento.
 - Convertir a PDF siempre con `tareas.py pdf` o `generar`, nunca con `soffice` directo:
   un `.docx` mal formado puede hacer que LibreOffice llene `/tmp`.

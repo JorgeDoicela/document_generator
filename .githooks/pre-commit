@@ -17,14 +17,14 @@ if echo "$STAGED_FILES" | grep -E '(^|/)\.env$' >/dev/null 2>&1; then
     exit 1
 fi
 
-# 2. Proteger el workspace privado (materias/* excepto .gitkeep) y temas locales privados
-PRIVATE_STAGED=$(echo "$STAGED_FILES" | grep -E '^(materias/[^.]|materias/\.[^g]|themes/local/)' || true)
+# 2. Proteger el workspace privado (materias/*, themes/local/* y themes/.previews/* excepto .gitkeep)
+PRIVATE_STAGED=$(echo "$STAGED_FILES" | grep -E '^(materias/|themes/local/|themes/\.previews/)' | grep -vE '^(materias|themes/local|themes/\.previews)/\.gitkeep$' || true)
 if [ -n "$PRIVATE_STAGED" ]; then
     echo "======================================================================" >&2
     echo "[ERROR DE PRIVACIDAD] Se intentó hacer commit de archivos privados" >&2
-    echo "dentro de materias/ o themes/local/:" >&2
+    echo "dentro de materias/, themes/local/ o themes/.previews/:" >&2
     echo "$PRIVATE_STAGED" >&2
-    echo "Solo materias/.gitkeep puede versionarse en el repositorio público." >&2
+    echo "Solo los archivos .gitkeep pueden versionarse en esas carpetas." >&2
     echo "======================================================================" >&2
     exit 1
 fi

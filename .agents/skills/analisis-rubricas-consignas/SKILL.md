@@ -73,4 +73,4 @@ Una vez consolidada la tabla de rúbrica en `TAREA.md`:
 2. **Ponderación de Extensión:** `tareas esqueleto` distribuye automáticamente la extensión recomendada de palabras de forma proporcional al puntaje de cada criterio:
    - Un criterio con peso del 40% (4 puntos) recibirá mayor extensión y profundidad de desarrollo.
    - Un criterio del 10% (1 punto) mantendrá una extensión acotada y concisa.
-3. **Inmutabilidad de Marcadores:** Al redactar en `generar_documento.py`, está terminantemente prohibido alterar los argumentos `criterios="C1"` o eliminar llamadas a `marcar_transversal()` / `transversal()`, ya que son el ancla utilizada por el motor de comprobación estática.
+3. **Inmutabilidad de Marcadores:** Al redactar en `generar_documento.py`, está terminantemente prohibido alterar los argumentos `criterios="C1"` o eliminar llamadas a `marcar_transversal()` / `transversal()`, ya que son el ancla utilizada por el motor de comprobación estática. Si se utiliza el flujo declarativo en `documento.md`, conservar las anotaciones de encabezado (`# Título {#C1}`) y la clave `transversales: [...]` en el frontmatter YAML.

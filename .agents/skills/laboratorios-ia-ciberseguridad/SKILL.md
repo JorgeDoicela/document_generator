@@ -14,7 +14,7 @@ Esta skill rige el desarrollo experimental, técnico y analítico de clases prá
 Queda estrictamente prohibido inventar o falsificar evidencia experimental:
 
 1. **Evidencia Ejecutable en Repositorio:** Siempre que la práctica requiera código (algoritmos en Python, scripts en Bash, consultas de bases de datos, programas en Prolog), el código debe escribirse y ejecutarse directamente en el entorno (`.venv`) para capturar las salidas exactas de la consola o generar las gráficas reales.
-   * Utilizar `bloques.codigo_bloque(doc, texto, etiqueta)` o `visual.bloque_codigo_word(doc, codigo, archivo=..., lenguaje=...)` para incrustar listados monoespaciados limpios, y el preset `tema="tecnico"` en `formato_institucional.nuevo_documento_tematico()` cuando no se exija un formato universitario específico.
+   * Utilizar `bloques.codigo_bloque(doc, texto, etiqueta)` o `visual.bloque_codigo_word(doc, codigo, archivo=..., lenguaje=..., tema=Temas.LIGHT|Temas.DARK)` para incrustar listados monoespaciados limpios; usar el preset oficial `apa7` o un tema `theme.json` personalizado (`themes/local/<slug>/theme.json`) cuando la materia tenga plantilla propia. También puede emplearse el flujo declarativo en `documento.md` (`tareas generar --desde-md`).
 2. **Evidencia de Entorno Físico, Pantallas o Insumos de Equipo:**
    * **Recorte Milimétrico de Evidencia:** Toda captura extraída de PDFs, documentos DOCX de compañeros o pantallas del sistema debe recortarse con coordenadas precisas, sin sangrado de ejercicios anteriores ni bordes cortados.
    * **Inserción Limpia:** Emplear `caja_captura_evidencia(doc, ruta_imagen, pie_de_figura)` para una presentación profesional centrada con pie explicativo en cursiva.

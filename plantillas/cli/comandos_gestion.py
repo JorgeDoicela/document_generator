@@ -79,13 +79,14 @@ def cmd_verificar(_args, raiz: Path, git_fn: Callable) -> None:
                 f
                 for f in archivos
                 if (f.startswith("materias/") and f != "materias/.gitkeep")
-                or f.startswith("themes/local/")
+                or (f.startswith("themes/local/") and f != "themes/local/.gitkeep")
+                or (f.startswith("themes/.previews/") and f != "themes/.previews/.gitkeep")
             ]
             informe(
                 not privados_en_git,
-                "workspace privado (materias/ y themes/local/) fuera de git"
+                "workspace privado (materias/, themes/local/ y themes/.previews/) fuera de git"
                 if not privados_en_git
-                else f"{len(privados_en_git)} archivo(s) privado(s) rastreados en git (materias/ o themes/local/)",
+                else f"{len(privados_en_git)} archivo(s) privado(s) rastreados en git (materias/, themes/local/ o themes/.previews/)",
             )
             r_hooks = git_fn("config", "--get", "core.hooksPath", check=False, capturar=True)
             hooks_path = (r_hooks.stdout or "").strip()

@@ -36,8 +36,10 @@ materias/*
 !materias/.gitkeep
 
 # Temas institucionales privados (logos/banners con marca propia del usuario) y vistas previas
-themes/local/
-themes/.previews/
+themes/local/*
+!themes/local/.gitkeep
+themes/.previews/*
+!themes/.previews/.gitkeep
 
 # Salidas generadas al ejecutar los ejemplos reproducibles
 examples/**/*.docx
