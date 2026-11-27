@@ -116,8 +116,9 @@ El sistema de verificación estática (`plantillas/comprobar.py`) audita la cobe
    * Para criterios holísticos (ortografía, bibliografía APA 7, trabajo en equipo o formato general), invocar `inst.marcar_transversal(doc, "C5", "C6")` (o `apa_docx.transversal(doc, ...)`) sobre un párrafo del cuerpo del informe antes de finalizar el documento.
    * Esto inyecta marcadores con sufijo `_todo` (`rubrica_C5_todo`).
 
-3. **Ubicación Obligatoria en el Cuerpo:**
-   * Los marcadores deben ubicarse siempre **después del primer salto de página de la portada institucional**. Cualquier marcador colocado en la portada queda excluido del análisis de comprobación.
+3. **Ubicación Obligatoria en el Cuerpo (`portada` vs. `articulo`):**
+   * En temas con portada separada (`apa7` y temas con `estilo_portada: "portada"`), los marcadores deben ubicarse siempre **después del primer salto de página de la portada**.
+   * En el preset `paper` (alias `arxiv`/`preprint`, `estilo_portada: "articulo"`), el cuerpo comienza directamente en la página 1 tras la cabecera de artículo (sin salto de página inicial) y `comprobar.py` inicia la auditoría en el primer encabezado `Heading` sin descartar secciones antes de `Referencias`.
 
 ---
 

@@ -16,7 +16,7 @@ El parser YAML integrado opera sin dependencias externas obligatorias (delega a 
 ---
 titulo: "Título del Documento"
 subtitulo: "Subtítulo o Materia"
-tema: apa7                     # apa7 | nombre_tema_json | ruta/theme.json
+tema: apa7                     # apa7 | paper (arxiv/preprint) | nombre_tema_json | ruta/theme.json
 estilo_citas: apa7             # apa7 | ieee | vancouver
 modalidad: individual          # individual | grupal
 autor: "Ana Pérez"             # o lista en integrantes: ["Ana Pérez", "Luis Gómez"]
@@ -63,7 +63,7 @@ referencias:
 ```bash
 # Compilar cualquier archivo Markdown/YAML independiente
 ./tareas compilar examples/ejemplo_markdown/documento.md
-./tareas compilar documento.md --tema ieee --citas ieee --sin-pdf
+./tareas compilar documento.md --tema paper --citas ieee --sin-pdf
 
 # Compilar documento.md dentro de una tarea con auditoría de TAREA.md
 ./tareas generar materias/<materia>/<tarea> --desde-md

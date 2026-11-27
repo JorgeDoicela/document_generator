@@ -188,12 +188,17 @@ def analizar(ruta_docx: Path) -> Analisis:
                         f"Imágenes duplicadas ({len(dibujos)} elementos drawing) en el {tipo} de la sección {num_sec}."
                     )
 
-    # La portada termina en el primer salto de página (si lo hay).
+    # La portada termina en el primer salto de página únicamente si antes de él
+    # no apareció ningún encabezado de sección (en modo artículo/preprint la
+    # cabecera va directa en la página 1 y el primer salto suele preceder a Referencias).
     inicio = 0
     for i, el in enumerate(cuerpo):
-        if el.tag == W + "p" and _salto_de_pagina(el):
-            inicio = i + 1
-            break
+        if el.tag == W + "p":
+            if _nivel(el, estilos) is not None:
+                break
+            if _salto_de_pagina(el):
+                inicio = i + 1
+                break
 
     en_indice = False
     titulo_visto = False

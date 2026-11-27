@@ -1028,6 +1028,9 @@ def _extraer_tema_de_texto(texto_fmt: str) -> str:
                 continue
             if re.search(rf"\b{re.escape(nombre_tema.lower())}\b", fmt_lower):
                 return str(nombre_tema)
+        for alias, destino in sorted(temas_mod._ALIAS_PRESETS.items(), key=lambda x: len(x[0]), reverse=True):
+            if re.search(rf"\b{re.escape(alias)}\b", fmt_lower):
+                return str(destino)
     except Exception:
         pass
     return ""
@@ -1058,18 +1061,20 @@ def _resolver_tema_solicitado(formato, fmt_tarea: str, cfg_actual: dict, fmt_mat
 def nuevo_documento(*, titulo, materia, salida, fecha=None, docente=None, tarea=None,
                     carpeta_capturas=None, nombre=None, institucion=None, carrera=None,
                     indice=False, modalidad=None, grupo=None, integrantes=None,
-                    formato=None):
+                    formato=None, resumen=None, palabras_clave=None):
     """Crea el Document(), aplica estilos APA 7 o un TemaDocumental configurable, arma la portada de
     estudiante (con soporte nativo para modalidad individual o grupal) y deja el cursor listo para el cuerpo.
 
     Portada APA 7 de estudiante: título, autor(es), grupo si aplica, afiliación (carrera,
-    institución), curso, docente y fecha de entrega.
+    institución), curso, docente y fecha de entrega. En formato `paper` (alias `arxiv`/`preprint`),
+    genera cabecera directa de artículo científico en la página 1 con resumen y palabras clave opcionales.
       - tarea: carpeta de la tarea; si se indica, `docente`, `fecha`, `modalidad`,
         `grupo` e `integrantes` se toman de TAREA.md y de la materia cuando no se pasan aquí.
       - fecha: str o datetime.date; por defecto la de entrega, o la de hoy.
       - indice: añade un índice automático tras la portada.
-      - formato: preset oficial ("apa7"), nombre de tema en themes/ o themes/local/,
-        ruta a un theme.json, o None (auto-detección por TAREA.md o .env).
+      - formato: preset oficial ("apa7", "paper" o alias "arxiv"/"preprint"), nombre de tema
+        en themes/ o themes/local/, ruta a un theme.json, o None (auto-detección por TAREA.md o .env).
+      - resumen / palabras_clave: resumen y palabras clave opcionales (integrados en cabecera en modo `paper`).
     """
     salida = os.fspath(salida)
     try:
@@ -1178,6 +1183,8 @@ def nuevo_documento(*, titulo, materia, salida, fecha=None, docente=None, tarea=
             grupo=grupo,
             integrantes=lista_integrantes,
             tarea=tarea,
+            resumen=resumen,
+            palabras_clave=palabras_clave,
         )
         props = doc.core_properties
         props.title, props.author, props.subject = titulo, autor_metadata, materia

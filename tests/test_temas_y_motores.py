@@ -39,13 +39,50 @@ def _tema_custom_demo() -> temas.TemaDocumental:
 
 
 class TestTemasDocumentales(unittest.TestCase):
-    def test_preset_oficial_apa7_disponible(self):
-        self.assertEqual(list(temas.PRESETS.keys()), ["apa7"])
+    def test_presets_oficiales_apa7_y_paper_disponibles(self):
+        self.assertEqual(list(temas.PRESETS.keys()), ["apa7", "paper"])
         self.assertIn("apa7", temas.listar_temas())
+        self.assertIn("paper", temas.listar_temas())
         t = temas.cargar_tema("apa7")
         self.assertEqual(t.nombre, "apa7")
         self.assertEqual(t.fuente, "Times New Roman")
         self.assertEqual(t.interlineado, 2.0)
+
+        tp = temas.cargar_tema("paper")
+        self.assertEqual(tp.nombre, "paper")
+        self.assertEqual(tp.fuente, "Georgia")
+        self.assertEqual(tp.estilo_portada, "articulo")
+        self.assertAlmostEqual(tp.ancho_pagina, 8.27, places=2)
+        self.assertAlmostEqual(tp.alto_pagina, 11.69, places=2)
+        self.assertEqual(temas.cargar_tema("arxiv").nombre, "paper")
+        self.assertEqual(temas.cargar_tema("preprint").nombre, "paper")
+
+    def test_preset_paper_cabecera_directa_a4_sin_portada_aparte(self):
+        doc = inst.nuevo_documento_tematico(
+            titulo="Dream-RSI: Recursive Self-Improvement",
+            subtitulo="Inteligencia Artificial",
+            tema="paper",
+            institucion="Laboratorio de Investigación",
+            integrantes=["Ana Pérez", "Carlos Ruiz"],
+            resumen="Resumen técnico del artículo científico en página 1.",
+            palabras_clave=["IA", "Preprint", "A4"],
+        )
+        inst.titulo_seccion(doc, "1. Introducción", nivel=1, criterios="C1")
+        inst.parrafo(doc, "Cuerpo del artículo comenzando directamente en la primera página.")
+
+        sec = doc.sections[0]
+        self.assertAlmostEqual(sec.page_width.inches, 8.27, places=2)
+        self.assertAlmostEqual(sec.page_height.inches, 11.69, places=2)
+        self.assertTrue(sec.different_first_page_header_footer)
+        self.assertIn("Dream-RSI", sec.header.paragraphs[0].text)
+        self.assertIn("pBdr", sec.header.paragraphs[0]._p.xml)
+        # No debe insertar salto de página después del encabezado del artículo
+        xml_body = doc.element.body.xml
+        self.assertNotIn('w:type="page"', xml_body)
+        # Debe incluir resumen y título en página 1
+        textos = [p.text for p in doc.paragraphs if p.text.strip()]
+        self.assertEqual(textos[0], "Dream-RSI: Recursive Self-Improvement")
+        self.assertTrue(any("Resumen técnico" in x for x in textos))
 
     def test_exportar_y_cargar_tema_json_personalizado(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -219,6 +256,51 @@ class TestMotoresMultiProposito(unittest.TestCase):
                 )
             self.assertEqual(doc.styles["Normal"].font.name, "Arial")
             self.assertEqual(doc.styles["Normal"].paragraph_format.line_spacing, 1.2)
+
+    def test_exportar_molde_con_alias_paper_preserva_geometria_y_portada(self):
+        import json
+
+        with tempfile.TemporaryDirectory() as tmp:
+            archivo = temas.exportar_molde_tema(Path(tmp) / "mi_arxiv", nombre="mi_arxiv", base="arxiv")
+            datos = json.loads(archivo.read_text(encoding="utf-8"))
+            self.assertEqual(datos["hereda"], "paper")
+            self.assertEqual(datos["estilo_portada"], "articulo")
+            self.assertAlmostEqual(datos["ancho_pagina"], 8.27, places=2)
+            self.assertAlmostEqual(datos["alto_pagina"], 11.69, places=2)
+
+    def test_apa_extraer_tema_resuelve_alias_y_nuevo_documento_paper(self):
+        from plantillas import apa_docx
+
+        self.assertEqual(apa_docx._extraer_tema_de_texto("Formato: arxiv"), "paper")
+        self.assertEqual(apa_docx._extraer_tema_de_texto("preprint científico"), "paper")
+        with tempfile.TemporaryDirectory() as tmp:
+            env_tmp = Path(tmp) / ".env"
+            env_tmp.write_text(
+                'NOMBRE_ESTUDIANTE="Ana Perez"\nINSTITUCION="Universidad Ejemplo"\n'
+                'CARRERA="Software"\nSUFIJO_ARCHIVOS="Perez_Ana"\n',
+                encoding="utf-8",
+            )
+            with mock.patch.object(config, "ARCHIVO_ENV", env_tmp), mock.patch.object(apa_docx, "_config", None):
+                doc, _fig, _tab = apa_docx.nuevo_documento(
+                    titulo="Artículo de Prueba",
+                    materia="Investigación",
+                    salida=Path(tmp) / "paper.docx",
+                    formato="arxiv",
+                    resumen="Resumen de prueba en cabecera directa.",
+                    palabras_clave=["IA", "Preprint"],
+                )
+            self.assertAlmostEqual(doc.sections[0].page_width.inches, 8.27, places=2)
+            self.assertNotIn('w:type="page"', doc.element.xml)
+            self.assertIn("Resumen de prueba en cabecera directa.", "\n".join(p.text for p in doc.paragraphs))
+
+    def test_titulo_seccion_niveles_4_y_5_respetan_cursiva_y_tamano_cuerpo(self):
+        doc = inst.nuevo_documento_tematico(titulo="Niveles", tema="paper", integrantes=["Ana"])
+        p4 = inst.titulo_seccion(doc, "Subsección Nivel 4", nivel=4)
+        p5 = inst.titulo_seccion(doc, "Subsección Nivel 5", nivel=5)
+        self.assertFalse(bool(p4.runs[0].italic))
+        self.assertEqual(p4.runs[0].font.size.pt, 11.0)
+        self.assertTrue(bool(p5.runs[0].italic))
+        self.assertEqual(p5.runs[0].font.size.pt, 11.0)
 
 
 class TestOptInDescargasYFuentes(unittest.TestCase):

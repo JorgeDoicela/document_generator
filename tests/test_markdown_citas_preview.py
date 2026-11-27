@@ -260,8 +260,41 @@ class TestPreviewTema(unittest.TestCase):
                 rutas = preview_tema.generar_previews("todos", salida=tmp_path / "out")
 
             nombres = [r.name for r in rutas]
-            self.assertEqual(nombres, ["preview_mi_tema.docx"])
-            self.assertTrue(rutas[0].is_file())
+            self.assertEqual(nombres, ["preview_mi_tema.docx", "preview_paper.docx"])
+            for r in rutas:
+                self.assertTrue(r.is_file())
+
+    def test_compilar_markdown_con_tema_paper(self) -> None:
+        ejemplo_dir = RAIZ / "examples" / "ejemplo_markdown"
+        with tempfile.TemporaryDirectory() as tmp:
+            salida = Path(tmp) / "articulo_paper.docx"
+            ruta = markdown_docx.compilar_markdown(
+                ejemplo_dir / "documento.md",
+                salida=salida,
+                tema="paper",
+                tarea=ejemplo_dir,
+            )
+            self.assertTrue(ruta.is_file())
+            doc = Document(str(ruta))
+            self.assertAlmostEqual(doc.sections[0].page_width.inches, 8.27, places=2)
+            self.assertAlmostEqual(doc.sections[0].page_height.inches, 11.69, places=2)
+            inf = comp.comprobar(ejemplo_dir, docx=ruta)
+            self.assertTrue(inf.ok, f"Errores en auditoría del preset paper: {inf.errores}")
+            assert inf.analisis is not None
+            self.assertGreaterEqual(len(inf.analisis.secciones), 3)
+            self.assertTrue(all(c.cubierto for c in inf.coberturas))
+            self.assertEqual(inf.analisis.anomalias_formato, [])
+            self.assertEqual(inf.analisis.avisos_tipograficos, [])
+
+    def test_generar_catalogo_estilos_con_tema_paper_sin_anomalias(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            salida = Path(tmp) / "catalogo_paper.docx"
+            ruta = preview_tema.generar_catalogo_estilos(tema="paper", salida=salida)
+            self.assertTrue(ruta.is_file())
+            analisis = comp.analizar(ruta)
+            self.assertGreaterEqual(len(analisis.secciones), 5)
+            self.assertEqual(analisis.anomalias_formato, [])
+            self.assertEqual(analisis.avisos_tipograficos, [])
 
     def test_catalogo_estilos_lista_todas_las_categorias(self) -> None:
         cat = preview_tema.obtener_catalogo_estilos()

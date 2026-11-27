@@ -48,6 +48,8 @@ def _iniciar_documento_muestra(
     titulo: str,
     subtitulo: str,
     autor: str = "Autor de Muestra",
+    resumen: Optional[str] = None,
+    palabras_clave: Optional[List[str]] = None,
 ) -> Any:
     """Inicializa un Document() aplicando APA 7 oficial o el TemaDocumental indicado."""
     if t.nombre == "apa7":
@@ -73,6 +75,8 @@ def _iniciar_documento_muestra(
         docente="Comité de Revisión",
         periodo="2026",
         integrantes=[autor],
+        resumen=resumen,
+        palabras_clave=palabras_clave,
     )
 
 
@@ -109,23 +113,30 @@ def generar_preview_tema(
     ruta_salida = _resolver_ruta_salida(salida, f"preview_{t.nombre}.docx")
 
     bib = _bib_muestra(estilo_ref)
+    texto_resumen = (
+        f"Este documento de muestra valida la identidad visual del tema **{t.nombre}**, "
+        f"verificando portada/cabecera, jerarquía de encabezados, tipografía ({t.fuente} {t.tamano_cuerpo} pt), "
+        f"ecuaciones OMML vectoriales, tablas en estilo `{t.estilo_tabla}` y referencias en formato `{estilo_ref}`."
+    )
+    kw_resumen = [t.nombre, t.fuente, t.estilo_tabla, estilo_ref]
     doc = _iniciar_documento_muestra(
         t,
         ruta_salida,
         titulo=f"Muestra Visual del Tema: {t.nombre}",
         subtitulo=t.descripcion or "Validación Tipográfica y Editorial",
+        resumen=texto_resumen if t.estilo_portada == "articulo" else None,
+        palabras_clave=kw_resumen if t.estilo_portada == "articulo" else None,
     )
 
-    bloques.resumen_ejecutivo(
-        doc,
-        f"Este documento de muestra valida la identidad visual del tema **{t.nombre}**, "
-        f"verificando portada, jerarquía de encabezados, tipografía ({t.fuente} {t.tamano_cuerpo} pt), "
-        f"ecuaciones OMML vectoriales, tablas en estilo `{t.estilo_tabla}` y referencias en formato `{estilo_ref}`.",
-        palabras_clave=[t.nombre, t.fuente, t.estilo_tabla, estilo_ref],
-        fuente=t.fuente,
-        tamano=max(t.tamano_cuerpo - 0.5, 9.5),
-        color_titulo=t.rgb_primario(),
-    )
+    if t.estilo_portada != "articulo":
+        bloques.resumen_ejecutivo(
+            doc,
+            texto_resumen,
+            palabras_clave=kw_resumen,
+            fuente=t.fuente,
+            tamano=max(t.tamano_cuerpo - 0.5, 9.5),
+            color_titulo=t.rgb_primario(),
+        )
 
     apa_docx.titulo(doc, "1. Parámetros de Identidad del Tema", nivel=1)
     apa_docx.parrafo(
@@ -500,7 +511,7 @@ def _seccion_temas_y_portadas_catalogo(doc: Any, t: temas_mod.TemaDocumental) ->
         ["Terminales y código", "light | dark | minimalista", "Temas.LIGHT | Temas.DARK | bloques.codigo_bloque()"],
         ["Bloques y fórmulas", "enunciado_formal | OMML", "bloques.enunciado_formal() | omml.formula_bloque()"],
         ["Citas y referencias", "apa7 | ieee | vancouver", 'Bibliografia(estilo="apa7"), estilo_citas: o --citas'],
-        ["Tema documental", "apa7 | <nombre theme.json>", "TEMA_DEFECTO (.env), Formato: (TAREA.md) o --tema"],
+        ["Tema documental", "apa7 | paper | <nombre theme.json>", "TEMA_DEFECTO (.env), Formato: (TAREA.md) o --tema"],
         ["Portada / modalidad", "individual | grupal", "Modalidad: (TAREA.md), modalidad: o --grupal"],
     ]
     visual.tabla_estilizada(
@@ -524,25 +535,32 @@ def generar_catalogo_estilos(
     terminales, bloques de código, citación, temas y portadas disponibles."""
     t = temas_mod.cargar_tema(tema)
     ruta_salida = _resolver_ruta_salida(salida, "catalogo_estilos.docx")
+    texto_resumen_cat = (
+        "Este muestrario reúne en un solo documento todos los estilos seleccionables del framework "
+        "(tablas `apa` vs `grid`, terminales CLI y bloques de código `light` vs `dark`, formatos de "
+        "citación `apa7`, `ieee` y `vancouver`, temas documentales y modalidades de portada) para "
+        "inspeccionarlos visualmente antes de elegir."
+    )
+    kw_cat = ["apa", "grid", "light", "dark", "apa7", "paper", "ieee", "vancouver"]
     doc = _iniciar_documento_muestra(
         t,
         ruta_salida,
         titulo="Catálogo y Comparativa Visual de Estilos",
         subtitulo="Guía de Elección Editorial",
         autor="Equipo Editorial",
+        resumen=texto_resumen_cat if t.estilo_portada == "articulo" else None,
+        palabras_clave=kw_cat if t.estilo_portada == "articulo" else None,
     )
 
-    bloques.resumen_ejecutivo(
-        doc,
-        "Este muestrario reúne en un solo documento todos los estilos seleccionables del framework "
-        "(tablas `apa` vs `grid`, terminales CLI y bloques de código `light` vs `dark`, formatos de "
-        "citación `apa7`, `ieee` y `vancouver`, temas documentales y modalidades de portada) para "
-        "inspeccionarlos visualmente antes de elegir.",
-        palabras_clave=["apa", "grid", "light", "dark", "apa7", "ieee", "vancouver"],
-        fuente=t.fuente,
-        tamano=max(t.tamano_cuerpo - 0.5, 9.5),
-        color_titulo=t.rgb_primario(),
-    )
+    if t.estilo_portada != "articulo":
+        bloques.resumen_ejecutivo(
+            doc,
+            texto_resumen_cat,
+            palabras_clave=kw_cat,
+            fuente=t.fuente,
+            tamano=max(t.tamano_cuerpo - 0.5, 9.5),
+            color_titulo=t.rgb_primario(),
+        )
 
     _seccion_tipografia_y_omml_catalogo(doc, t)
     _seccion_tablas_catalogo(doc, t)

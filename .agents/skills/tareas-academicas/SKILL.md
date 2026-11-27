@@ -48,7 +48,7 @@ El manejo de referencias es un pilar innegociable de la integridad académica. L
    * **Libro:** Autor, A. A. (Año). *Título de la obra*. Editorial.
    * **Artículo:** Autor, A. A., & Autor, B. B. (Año). Título del artículo. *Nombre de la Revista*, volumen(número), páginas. https://doi.org/xxxx
    * **Norma/Estándar:** Organización. (Año). *Título del estándar* (Norma No. XXX). Enlace o editorial.
-   * Para revisar todas las variantes de formato disponibles (tablas `apa`/`grid`, código `light`/`dark`, citas y temas), consultar `./tareas estilos [--catalogo]`.
+   * **Presets Oficiales y Temas Institucionales:** Emplear `apa7` (US Letter, Times New Roman 12 pt, doble espacio, portada formal) para entregas académicas estándar, `paper` (alias `arxiv`/`preprint`: A4, Georgia 11 pt, cabecera directa en pág. 1 con resumen y tablas booktabs) para artículos científicos o informes de investigación, o un tema `theme.json` en `themes/local/` extraído desde la plantilla del docente (`./tareas temas --extraer`). Para consultar todas las variantes disponibles, ejecutar `./tareas estilos [--catalogo]`.
 7. **Integración Fluida:** Las citas deben integrarse orgánicamente en el discurso mediante citas parentéticas o narrativas, evitando acumular citas al final de párrafos sin desarrollo reflexivo propio.
 
 ---

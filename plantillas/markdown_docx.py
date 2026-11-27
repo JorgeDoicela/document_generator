@@ -367,6 +367,11 @@ def _crear_documento_base(
         )
         return doc, tema_obj
 
+    resumen_art = str(meta["resumen"]) if (tema_obj.estilo_portada == "articulo" and meta.get("resumen")) else None
+    kw_art = meta.get("palabras_clave") if tema_obj.estilo_portada == "articulo" else None
+    if isinstance(kw_art, str):
+        kw_art = [x.strip() for x in kw_art.split(",") if x.strip()]
+
     doc = fmt_inst.nuevo_documento_tematico(
         titulo=titulo_doc,
         subtitulo=materia,
@@ -379,6 +384,8 @@ def _crear_documento_base(
         grupo=str(grupo) if grupo else None,
         integrantes=integrantes,
         tarea=tarea,
+        resumen=resumen_art,
+        palabras_clave=kw_art if isinstance(kw_art, list) else None,
         incluir_indice=incluir_indice,
     )
     return doc, tema_obj
@@ -430,7 +437,7 @@ def compilar_markdown(
         carpeta_capturas=carpeta_capturas,
     )
 
-    if meta.get("resumen"):
+    if meta.get("resumen") and tema_obj.estilo_portada != "articulo":
         kw = meta.get("palabras_clave") or []
         if isinstance(kw, str):
             kw = [x.strip() for x in kw.split(",") if x.strip()]

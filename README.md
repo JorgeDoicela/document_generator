@@ -1,6 +1,6 @@
 # document_generator — Framework Documental Multi-Propósito (Rubric-Driven)
 
-Framework programático en Python para la generación, estructuración y auditoría estática de **documentos académicos y profesionales** bajo el estándar oficial **APA 7.ª edición** y **temas personalizados vía JSON (`theme.json`)** en formato **WordML (`.docx`)** y **PDF vectorial**.
+Framework programático en Python para la generación, estructuración y auditoría estática de **documentos académicos, artículos científicos y entregables profesionales** bajo los presets oficiales **APA 7.ª edición (`apa7`)** y **Preprint Científico (`paper`, alias `arxiv`/`preprint`)**, además de **temas personalizados vía JSON (`theme.json`)** en formato **WordML (`.docx`)** y **PDF vectorial**.
 
 El principio rector del sistema es determinista: los criterios de evaluación o requisitos del documento gobiernan la estructura, y un auditor estático verifica el XML resultante antes de entregarlo.
 
@@ -10,9 +10,10 @@ El principio rector del sistema es determinista: los criterios de evaluación o 
 
 ## Capacidades Principales
 
-1. **Estándar APA 7 y Sistema de Temas JSON (`plantillas/temas.py`, `formato_institucional.py`, `apa_docx.py`):**
-   - **Preset oficial integrado (`apa7`):** norma APA 7.ª edición (papel US Letter, Times New Roman 12 pt, doble espacio, márgenes de 1", encabezados niveles 1–3 sin espaciado redundante, control de viudas/huérfanas, paginación superior derecha en Times New Roman 12 pt y tablas de 3 líneas).
-   - **Temas institucionales/personalizados (`theme.json`):** configura colores, tipografía, interlineado, márgenes, encabezados, logos y banners sin tocar Python, o extráelos automáticamente desde cualquier `.docx` con `./tareas temas --extraer`. Los temas privados se guardan en `themes/local/` (ignorados por Git).
+1. **Presets Oficiales (`apa7` y `paper`) y Sistema de Temas JSON (`plantillas/temas.py`, `formato_institucional.py`, `apa_docx.py`):**
+   - **Preset oficial `apa7`:** norma APA 7.ª edición (papel US Letter, Times New Roman 12 pt, doble espacio, márgenes de 1", encabezados niveles 1–5, citas en bloque, apéndices, control de viudas/huérfanas, paginación superior derecha en Times New Roman 12 pt y tablas de 3 líneas).
+   - **Preset oficial `paper` (alias `arxiv`, `preprint`):** artículo científico moderno a una columna (papel A4 `8.27" × 11.69"`, Georgia 11 pt, interlineado `1.24`, cabecera directa en página 1 con título 20 pt, autores, afiliación, resumen en negrita y divisor horizontal, encabezado corriente desde página 2 y tablas *booktabs* de 3 líneas).
+   - **Temas institucionales/personalizados (`theme.json`):** configura colores, tipografía, geometría de página, modo de portada (`portada` o `articulo`), interlineado, márgenes, encabezados, logos y banners sin tocar Python, o extráelos automáticamente desde cualquier `.docx` con `./tareas temas --extraer`. Los temas privados se guardan en `themes/local/` (ignorados por Git).
 2. **Ingeniería OpenXML de Alta Fidelidad (`omml.py`, `bloques.py`, `visual.py`):**
    - **Ecuaciones matemáticas OMML vectoriales (`omml.py`):** convierte expresiones y comandos LaTeX a Unicode + XML OMML (`<m:oMathPara>`) compatible con Microsoft Word y LibreOffice (sin caracteres rotos ni desbordes horizontales).
    - **Bloques editoriales universales (`bloques.py`):** texto enriquecido Markdown (`**negrita**`, `*cursiva*`, `` `código inline` ``, superíndices/subíndices), párrafos estructurados sin estiramiento tipográfico, resúmenes ejecutivos con palabras clave, índices automáticos nativos (TOC), metadatos Core Properties y figuras con pies idempotentes.
@@ -77,7 +78,7 @@ from plantillas import bloques, formato_institucional as inst, omml
 doc = inst.nuevo_documento_tematico(
     titulo="Arquitectura de Microservicios",
     subtitulo="Especificación Técnica — RFC-01",
-    tema="apa7",             # apa7 | nombre_tema | ruta/theme.json
+    tema="apa7",             # apa7 | paper | nombre_tema | ruta/theme.json
     incluir_indice=True,
 )
 bloques.resumen_ejecutivo(doc, "Resumen ejecutivo del documento.", palabras_clave=["APA 7", "OpenXML"])
@@ -137,7 +138,7 @@ document_generator/
 ├── plantillas/                 # Paquete Python principal (PEP 517/621)
 │   ├── cli/                     # Despachador CLI y servicio LibreOffice aislado
 │   ├── motor_base.py            # Protocolo BaseDocumentEngine y registro de motores
-│   ├── temas.py                 # Preset oficial (apa7) y loader de temas JSON (themes/ y themes/local/)
+│   ├── temas.py                 # Presets oficiales (apa7, paper) y loader de temas JSON (themes/ y themes/local/)
 │   ├── omml.py                  # Motor matemático LaTeX -> Unicode -> OMML vectorial
 │   ├── bloques.py               # Componentes editoriales universales (Markdown, TOC, tablas, resumen)
 │   ├── formato_institucional.py # Motor configurable multi-propósito

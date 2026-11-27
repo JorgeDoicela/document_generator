@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Sistema extensible de temas documentales (preset oficial APA 7 + temas JSON personalizados).
+"""Sistema extensible de temas documentales (presets oficiales `apa7` y `paper` + temas JSON).
 
-Mantiene `apa7` como único preset integrado bajo el estándar APA 7.a edición,
-y permite cargar cualquier tema institucional o personalizado vía `theme.json`
+Integra dos presets listos para usar:
+  - `apa7`: Norma APA 7.a edición (portada universitaria, US Letter, Times New Roman 12 pt, doble espacio).
+  - `paper`: Artículo científico / preprint moderno estilo arXiv/DeepMind (A4, Georgia 11 pt,
+    cabecera directa en página 1 con resumen y línea divisoria, running header, tablas booktabs).
+
+Además permite cargar cualquier tema institucional o personalizado vía `theme.json`
 en `themes/` o `themes/local/` (o extraerlo desde un `.docx` existente).
 """
 import json
@@ -54,6 +58,9 @@ class TemaDocumental:
     banner_inferior: Optional[str] = None
     imagen_encabezado: Optional[str] = None
     directorio_base: Optional[str] = None
+    ancho_pagina: float = 8.5
+    alto_pagina: float = 11.0
+    estilo_portada: str = "portada"  # "portada" (carátula aparte) | "articulo" (cabecera directa en pág. 1)
 
     def rgb_primario(self) -> RGBColor:
         return RGBColor(*self.color_primario)
@@ -100,7 +107,39 @@ PRESETS: Dict[str, TemaDocumental] = {
         color_texto=(0, 0, 0),
         color_secundario=(80, 80, 80),
         estilo_tabla="apa",
+        ancho_pagina=8.5,
+        alto_pagina=11.0,
+        estilo_portada="portada",
     ),
+    "paper": TemaDocumental(
+        nombre="paper",
+        descripcion="Artículo científico / preprint moderno (A4, Georgia 11 pt, cabecera directa en pág. 1, running header, tablas booktabs).",
+        fuente="Georgia",
+        tamano_cuerpo=11.0,
+        tamano_h1=13.0,
+        tamano_h2=11.0,
+        tamano_h3=10.5,
+        interlineado=1.24,
+        espacio_despues=6.0,
+        sangria_primera_linea=False,
+        h1_centrado=False,
+        margen_sup=0.95,
+        margen_inf=0.85,
+        margen_izq=0.87,
+        margen_der=0.87,
+        color_primario=(17, 24, 39),
+        color_texto=(17, 24, 39),
+        color_secundario=(107, 114, 128),
+        estilo_tabla="apa",
+        ancho_pagina=8.27,
+        alto_pagina=11.69,
+        estilo_portada="articulo",
+    ),
+}
+
+_ALIAS_PRESETS: Dict[str, str] = {
+    "arxiv": "paper",
+    "preprint": "paper",
 }
 
 
@@ -141,8 +180,9 @@ def cargar_tema(nombre_o_ruta: Union[str, Path, TemaDocumental] = "apa7") -> Tem
         return nombre_o_ruta
 
     clave = str(nombre_o_ruta).strip()
-    if clave.lower() in PRESETS:
-        return PRESETS[clave.lower()]
+    clave_low = _ALIAS_PRESETS.get(clave.lower(), clave.lower())
+    if clave_low in PRESETS:
+        return PRESETS[clave_low]
 
     ruta = Path(clave)
     candidatos = [
@@ -176,7 +216,8 @@ def _rgb_a_hex(rgb: RGBTuple) -> str:
 
 def exportar_molde_tema(destino: Path, nombre: str, base: str = "apa7") -> Path:
     """Crea un archivo theme.json listo para personalizar por cualquier usuario u organización."""
-    preset = PRESETS.get(base.lower(), PRESETS["apa7"])
+    clave_base = _ALIAS_PRESETS.get(base.strip().lower(), base.strip().lower())
+    preset = PRESETS.get(clave_base, PRESETS["apa7"])
     destino.mkdir(parents=True, exist_ok=True)
     archivo = destino / "theme.json"
     plantilla = {
@@ -186,6 +227,9 @@ def exportar_molde_tema(destino: Path, nombre: str, base: str = "apa7") -> Path:
         "fuente": preset.fuente,
         "tamano_cuerpo": preset.tamano_cuerpo,
         "interlineado": preset.interlineado,
+        "ancho_pagina": preset.ancho_pagina,
+        "alto_pagina": preset.alto_pagina,
+        "estilo_portada": preset.estilo_portada,
         "color_primario": _rgb_a_hex(preset.color_primario),
         "color_texto": _rgb_a_hex(preset.color_texto),
         "color_secundario": _rgb_a_hex(preset.color_secundario),

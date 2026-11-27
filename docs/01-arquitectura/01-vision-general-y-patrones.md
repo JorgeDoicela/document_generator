@@ -84,7 +84,7 @@ El software está desacoplado en componentes con responsabilidades bien delimita
 | `apa_docx.py` | Motor de maquetación bajo el estándar formal APA 7 (`MotorAPA7`) y citación multi-estilo. | `nuevo_documento()`, `Bibliografia` |
 | `formato_institucional.py` | Motor configurable por temas JSON (`MotorInstitucional`). | `nuevo_documento_tematico()`, `titulo_seccion()`, `marcar_transversal()` |
 | `markdown_docx.py` | Compilador declarativo de Markdown + YAML frontmatter hacia WordML (`.docx`). | `compilar_markdown()`, `extraer_frontmatter()` |
-| `temas.py` / `extractor_tema.py` | Preset base `apa7`, carga JSON (`themes/` y `themes/local/`) y extracción automática desde `.docx`. | `cargar_tema()`, `listar_temas()`, `extraer_tema_desde_docx()` |
+| `temas.py` / `extractor_tema.py` | Presets oficiales `apa7` y `paper`, carga JSON (`themes/` y `themes/local/`) y extracción automática desde `.docx`. | `cargar_tema()`, `listar_temas()`, `extraer_tema_desde_docx()` |
 | `preview_tema.py` | Generación de vistas previas de temas y catálogo visual comparativo de estilos. | `generar_preview_tema()`, `generar_catalogo_estilos()`, `obtener_catalogo_estilos()` |
 | `omml.py` / `bloques.py` | Ecuaciones matemáticas OMML vectoriales y componentes editoriales universales. | `formula_bloque()`, `parrafo_estructurado()`, `enunciado_formal()`, `tabla_academica()` |
 | `rubrica.py` | Extracción de rúbricas desde DOCX, normalización y cálculo de pesos. | `leer()`, `importar_docx()`, `escribir()` |

@@ -2,27 +2,30 @@
 
 Los módulos `plantillas.formato_institucional`, `plantillas.temas`, `plantillas.extractor_tema`, `plantillas.omml` y `plantillas.bloques` conforman un motor documental multi-propósito totalmente desacoplado de marcas o universidades específicas.
 
-Permite generar documentos bajo el estándar oficial **APA 7** o con la identidad visual de cualquier institución mediante archivos **`theme.json`** configurables.
+Permite generar documentos bajo los presets oficiales **APA 7 (`apa7`)** y **Preprint Científico (`paper`, alias `arxiv`/`preprint`)**, o con la identidad visual de cualquier institución mediante archivos **`theme.json`** configurables.
 
 ---
 
 ## 1. Catálogo de Presets y Temas JSON (`plantillas.temas`)
 
-El sistema mantiene `apa7` como único preset integrado y carga dinámicamente temas personalizados desde `themes/<nombre>/theme.json` o `themes/local/<nombre>/theme.json` (ignorado por Git para marcas privadas):
+El sistema incluye dos presets oficiales integrados (`apa7` y `paper`) y carga dinámicamente temas personalizados desde `themes/<nombre>/theme.json` o `themes/local/<nombre>/theme.json` (ignorado por Git para marcas privadas):
 
-| Preset / Modo | Tipografía | Interlineado | Estilo de Tabla | Caso de Uso |
+| Preset / Modo | Tipografía | Papel / Interlineado | Estilo de Portada y Tabla | Caso de Uso |
 |---|---|---|---|---|
-| `apa7` | Times New Roman 12 pt | `2.0` | `apa` (3 líneas) | Estándar oficial APA 7.ª edición (US Letter, márgenes 1"). |
-| `theme.json` | Configurable | Configurable | `apa` o `grid` | Plantillas institucionales o personalizadas en `themes/` o `themes/local/`. |
+| `apa7` | Times New Roman 12 pt | US Letter / `2.0` | Portada formal aparte / `apa` (3 líneas) | Estándar oficial APA 7.ª edición (márgenes 1", niveles H1–H5). |
+| `paper` (`arxiv`, `preprint`) | Georgia 11 pt | A4 (`8.27" × 11.69"`) / `1.24` | Cabecera directa en pág. 1 (`articulo`) / `apa` (booktabs) | Artículos científicos, preprints técnicos e informes de investigación a 1 columna. |
+| `theme.json` | Configurable | Configurable | `portada` o `articulo` / `apa` o `grid` | Plantillas institucionales o personalizadas en `themes/` o `themes/local/`. |
 
 ### Esquema de `theme.json`
 
-Un tema personalizado se crea manualmente (`./tareas temas --crear mi-tema --base apa7 --local`) o se extrae automáticamente desde cualquier plantilla `.docx` existente (`./tareas temas --extraer plantilla.docx --nombre mi-tema`):
+Un tema personalizado se crea manualmente (`./tareas temas --crear mi-tema --base apa7|paper --local`) o se extrae automáticamente desde cualquier plantilla `.docx` existente (`./tareas temas --extraer plantilla.docx --nombre mi-tema`):
 
 | Clave JSON | Tipo | Uso |
 |---|---|---|
-| `hereda` | `str` | Preset base (`apa7`). |
+| `hereda` | `str` | Preset base (`apa7` o `paper`). |
 | `fuente`, `tamano_cuerpo`, `tamano_h1..h3` | `str` / `float` | Jerarquía tipográfica de cuerpo y encabezados. |
+| `ancho_pagina`, `alto_pagina` | `float` | Dimensiones de página en pulgadas (`8.5 × 11.0` US Letter o `8.27 × 11.69` A4). |
+| `estilo_portada` | `"portada"` \| `"articulo"` | Página de portada separada (`portada`) o cabecera directa en página 1 con resumen (`articulo`). |
 | `interlineado`, `espacio_despues`, `margen_*` | `float` | Geometría de página (márgenes en pulgadas) y espaciado. |
 | `color_primario`, `color_texto`, `color_secundario` | Hex (`#1B365D`) o RGB | Paleta cromática de títulos, portada y pies. |
 | `estilo_tabla` | `"apa"` \| `"grid"` | Estilo de tablas por defecto del tema. |
@@ -66,7 +69,7 @@ inst.marcar_transversal(doc, "C4")
 ```
 
 > [!IMPORTANT]
-> `marcar_transversal()` debe invocarse sobre un párrafo del cuerpo del documento (después del salto de página de la portada y antes de `doc.save()`).
+> En temas con portada separada (`estilo_portada: "portada"`), `marcar_transversal()` debe invocarse después del salto de página de la portada. En temas de cabecera directa (`estilo_portada: "articulo"`, como `paper`), el cuerpo inicia directamente en la página 1 y el auditor `comprobar.py` analiza desde la primera sección `Heading` sin saltar contenido antes de `Referencias`.
 
 ---
 
