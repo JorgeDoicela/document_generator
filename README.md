@@ -151,7 +151,6 @@ document_generator/
 ├── themes/                      # Temas compartidos y themes/local/ (ignorado por Git)
 ├── .agents/                     # Directrices y skills locales para agentes de IA
 ├── docs/                        # Documentación técnica modular (00- a 04-)
-├── tools/                       # Utilidades de diagramas de flujo y comparativa visual
 ├── tests/                       # Suite de pruebas unitarias e integración
 └── .githooks/                   # Hook pre-commit de prevención de fugas (.env / secretos)
 ```
@@ -185,7 +184,7 @@ Este repositorio parte de la base de [JosephBano/rubric-driven](https://github.c
 Sobre esa base, **Jorge Doicela** adaptó y amplió el proyecto a sus necesidades con las siguientes incorporaciones técnicas:
 
 - **Arquitectura de motores y sistema de temas (`motor_base.py`, `temas.py`, `formato_institucional.py`, `extractor_tema.py`):** protocolo `BaseDocumentEngine`, preset oficial refinado `apa7`, soporte para temas JSON (`themes/` y `themes/local/`), extracción automática de estilos desde archivos `.docx` (`./tareas temas --extraer`), vistas previas (`preview_tema.py`) y portadas con autoría individual, grupal o corporativa.
-- **Ingeniería OpenXML, ecuaciones OMML y componentes visuales (`omml.py`, `bloques.py`, `visual.py`, `fuentes_comunes.py`):** conversión LaTeX a Unicode y OMML vectorial compatible con Word y LibreOffice, bloques editoriales con parseo Markdown, índices automáticos (TOC), tablas con layout fijo (`APA 7` y `Grid`), renderizadores de terminal/código a 300 DPI y utilidades de diagramas en `tools/`.
+- **Ingeniería OpenXML, ecuaciones OMML y componentes visuales (`omml.py`, `bloques.py`, `visual.py`, `fuentes_comunes.py`):** conversión LaTeX a Unicode y OMML vectorial compatible con Word y LibreOffice, bloques editoriales con parseo Markdown, índices automáticos (TOC), tablas con layout fijo (`APA 7` y `Grid`) y renderizadores de terminal/código a 300 DPI.
 - **Refactorización modular y empaquetado PEP 621 (`plantillas/`, `plantillas/cli/`, `pyproject.toml`, `Makefile`):** migración de `_plantillas/` a paquete Python instalable (`pip install -e .`), separación del CLI en submódulos, subcomandos `auditar` y `temas`, y auditoría estática ampliada para detectar fugas de LaTeX/Markdown y defectos visuales.
 - **Soporte multiplataforma, seguridad y ecosistema IA (`plataforma.py`, `setup.*`, `tareas.*`, `.githooks/`, `.agents/skills/`, `docs/`, `examples/`):** paridad Linux/macOS/Windows con CI en matriz Ubuntu/Windows, hook `pre-commit` contra fugas de secretos, exportación a Descargas opt-in, documentación técnica modular Docs-as-Code, skills especializadas para agentes IA y ampliación de la suite de pruebas (`tests/`).
 

@@ -24,11 +24,6 @@ if __package__ in (None, ""):
 else:
     from . import plataforma
 
-# Directorio raíz del kit y fuentes tipográficas
-AQUI = Path(__file__).resolve().parent
-RAIZ = AQUI.parent
-FONT_INCONSOLATA = RAIZ / "tools" / "pseint" / "Inconsolata-Regular.ttf"
-
 
 # ==============================================================================
 # 1. PALETAS Y DEFINICIÓN DE TEMAS VISUALES
@@ -158,7 +153,6 @@ def renderizar_terminal(
 
     fpath = plataforma.resolver_fuente_monospace(
         fuente_explicita=Path(fuente_path) if fuente_path else None,
-        fuente_incluida=FONT_INCONSOLATA,
     )
 
     scale = 2  # Super-sampling 2x

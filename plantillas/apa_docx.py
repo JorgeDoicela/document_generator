@@ -316,32 +316,6 @@ def _ids_criterios(criterios: Optional[Union[str, List[str]]]) -> list[str]:
 
 
 
-def _set_borde_celda(celda, color="000000", tam="4"):
-    tc_pr = celda._tc.get_or_add_tcPr()
-    bordes = OxmlElement("w:tcBorders")
-    for lado in ("top", "left", "bottom", "right"):
-        el = OxmlElement("w:%s" % lado)
-        el.set(qn("w:val"), "single")
-        el.set(qn("w:sz"), tam)
-        el.set(qn("w:color"), color)
-        bordes.append(el)
-    tc_pr.append(bordes)
-
-
-def _sombrear_celda(celda, hexcolor="D9D9D9"):
-    tc_pr = celda._tc.get_or_add_tcPr()
-    shd = OxmlElement("w:shd")
-    shd.set(qn("w:val"), "clear")
-    shd.set(qn("w:color"), "auto")
-    shd.set(qn("w:fill"), hexcolor)
-    tc_pr.append(shd)
-
-
-def _texto_con_cursivas(p, texto, tamano=12):
-    """Añade `texto` a `p` interpretando sintaxis de formato enriquecido."""
-    _agregar_texto_enriquecido(p, texto, tamano=tamano)
-
-
 def _agregar_texto_enriquecido(parrafo_obj, texto: str, *, f_nombre: str = FUENTE, tamano: float = 12,
                               negrita: bool = False, cursiva: bool = False, color=NEGRO):
     """Delega el renderizado de texto enriquecido al núcleo único en bloques.py."""
@@ -927,21 +901,6 @@ def referencias(doc, bib=None, *, criterios=None, nueva_pagina=True, entradas=()
 # --------------------------------------------------------------------------
 # Punto de entrada: crea el documento con portada y estilos ya aplicados
 # --------------------------------------------------------------------------
-def _desde_tarea(carpeta):
-    """Docente y fecha de entrega desde TAREA.md y el README de la materia."""
-    if __package__ in (None, ""):
-        sys.path.insert(0, str(Path(__file__).resolve().parent))
-        import ficha
-    else:
-        from . import ficha
-    try:
-        t = ficha.leer_tarea(carpeta)
-    except FileNotFoundError:
-        return None, None
-    return t.materia.docente, t.fecha
-
-
-
 def _extraer_tema_de_texto(texto_fmt: str) -> str:
     """Extrae un nombre de tema o ruta JSON desde un campo de formato (TAREA.md o MATERIA.md)."""
     fmt_limpio = (texto_fmt or "").strip()

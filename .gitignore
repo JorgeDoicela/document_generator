@@ -29,7 +29,6 @@
 !/.editorconfig
 !/pyproject.toml
 !/docs/
-!/tools/
 
 # Workspace privado del estudiante: se conserva la carpeta vacía mediante .gitkeep
 materias/*
@@ -44,9 +43,6 @@ themes/.previews/*
 # Salidas generadas al ejecutar los ejemplos reproducibles
 examples/**/*.docx
 examples/**/*.pdf
-
-# Herramientas externas opcionales descargadas localmente
-tools/pseint/
 
 # Artefactos de Python y copias de seguridad de `tareas.py esqueleto --forzar`
 __pycache__/

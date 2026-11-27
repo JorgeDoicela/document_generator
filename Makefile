@@ -49,7 +49,7 @@ test:
 	@$(PYTHON) -m unittest
 
 lint:
-	@$(RUFF) check plantillas tests examples tools
+	@$(RUFF) check plantillas tests examples
 
 typecheck:
 	@$(MYPY) plantillas
