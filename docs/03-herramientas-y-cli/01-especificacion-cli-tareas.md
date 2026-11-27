@@ -102,13 +102,16 @@ Reescribe `generar_documento.py` estructurando una sección por cada criterio de
 
 ### 6. `generar`
 
-Compila el documento Word, ejecuta la auditoría estática y exporta a PDF.
+Compila el documento Word (desde `generar_documento.py` o `documento.md`), ejecuta la auditoría estática y exporta a PDF.
 
-* **Sintaxis:** `tareas generar <ruta_tarea> [--sin-pdf]`
+* **Sintaxis:** `tareas generar <ruta_tarea> [--desde-md] [--tema TEMA] [--citas ESTILO] [--sin-pdf]`
 * **Opciones:**
+  - `--desde-md`: Compila `documento.md` mediante el compilador declarativo Markdown/YAML en lugar de ejecutar `generar_documento.py` (también se activa automáticamente si existe `documento.md` sin `generar_documento.py`).
+  - `--tema TEMA`: Sobrescribe el tema documental declarado al compilar desde `documento.md`.
+  - `--citas {apa7,ieee,vancouver}`: Sobrescribe el estilo de citación al compilar desde `documento.md`.
   - `--sin-pdf`: Omite la invocación a LibreOffice, generando únicamente el `.docx` y validando la rúbrica.
 * **Comportamiento:**
-  1. Ejecuta el intérprete Python sobre `generar_documento.py`.
+  1. Ejecuta el intérprete Python sobre `generar_documento.py` o compila `documento.md`.
   2. Ejecuta `comprobar()` sobre el `.docx` resultante.
   3. Actualiza la columna "Dónde se cumple" en `TAREA.md`.
   4. Si la comprobación pasa sin errores, exporta el PDF final.
@@ -181,18 +184,34 @@ Transiciona el estado de una tarea sincronizando simultáneamente `TAREA.md` y l
 
 ### 12. `temas`
 
-Gestiona los temas documentales del framework (`plantillas/temas.py` y `plantillas/extractor_tema.py`): lista los presets y temas locales disponibles, genera moldes `theme.json` o extrae automáticamente el formato desde cualquier `.docx` de referencia.
+Gestiona los temas documentales del framework (`plantillas/temas.py`, `plantillas/extractor_tema.py` y `plantillas/preview_tema.py`): lista los presets y temas locales disponibles, genera moldes `theme.json`, extrae automáticamente el formato desde cualquier `.docx` de referencia o genera muestras visuales de validación.
 
 * **Sintaxis:**
   ```bash
   tareas temas
   tareas temas --crear <nombre> [--base <preset>] [--local]
   tareas temas --extraer <archivo.docx> [--nombre <slug>] [--compartido]
+  tareas temas --preview <tema|todos> [--salida <ruta>] [--citas apa7|ieee|vancouver] [--sin-pdf]
   ```
 * **Opciones:**
   - *(sin opciones)*: Imprime los presets integrados (`apa7`, `academico`, `tecnico`, `ejecutivo`, `ieee`) y los temas detectados en `themes/` y `themes/local/`.
   - `--crear <nombre>`: Crea un archivo `theme.json` editable heredando del preset `--base` (`academico` por defecto). Con `--local`, lo guarda en `themes/local/` (ignorado por Git).
   - `--extraer <archivo.docx>`: Analiza el OpenXML del `.docx` suministrado e infiere márgenes, tipografía, interlineado, color primario, estilo de tabla (`grid`/`apa`) e imágenes embebidas (`header`, `logo_portada`, `banner_inferior`), generando el `theme.json` en `themes/local/<slug>/` por defecto (o en `themes/<slug>/` con `--compartido`).
   - `--nombre <slug>`: Identificador explícito del tema al usar `--extraer` (si se omite, se deriva del nombre del `.docx`).
+  - `--preview <tema|todos>`: Genera un documento de muestra completo (`.docx` y `.pdf`, salvo `--sin-pdf`) en `themes/.previews/` (o en `--salida`) para validar visualmente portada, tipografía, OMML, tablas, código y referencias del tema.
+
+---
+
+### 13. `compilar`
+
+Compila cualquier archivo Markdown con frontmatter YAML a `.docx` y opcionalmente `.pdf` sin necesidad de escribir scripts Python.
+
+* **Sintaxis:** `tareas compilar <archivo.md> [--salida <archivo.docx>] [--tema TEMA] [--citas apa7|ieee|vancouver] [--sin-pdf]`
+* **Opciones:**
+  - `--salida` / `-o`: Ruta personalizada del `.docx` de salida (por defecto usa el nombre del archivo `.md` o el campo `salida:` del frontmatter).
+  - `--tema`: Sobrescribe el tema declarado en el frontmatter.
+  - `--citas`: Sobrescribe el estilo de citación (`apa7`, `ieee` o `vancouver`).
+  - `--sin-pdf`: Genera únicamente el `.docx` sin invocar LibreOffice.
+* **Comportamiento:** Si en la carpeta del `.md` existe un archivo `TAREA.md`, ejecuta automáticamente `comprobar()` y actualiza la cobertura de rúbrica.
 
 

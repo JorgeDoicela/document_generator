@@ -18,7 +18,8 @@ docs/
 │   ├── 00-arquitectura-motores-base.md               # Protocolo BaseDocumentEngine, marcadores XML y catálogo
 │   ├── 01-motor-apa7.md                              # Generador APA 7, citas, bibliografía y marcadores
 │   ├── 02-motor-institucional-y-temas.md             # Motor multi-propósito, presets/JSON, extractor .docx y OMML
-│   └── 03-componentes-visuales-y-tablas.md           # Terminales 300 DPI, tarjetas académicas, código WordML y tablas APA/Grid
+│   ├── 03-componentes-visuales-y-tablas.md           # Terminales 300 DPI, tarjetas académicas, código WordML y tablas APA/Grid
+│   └── 04-entrada-declarativa-citas-y-preview.md     # Compilador Markdown/YAML, citas APA 7/IEEE/Vancouver y preview de temas
 
 ├── 03-herramientas-y-cli/
 │   ├── 01-especificacion-cli-tareas.md               # Contrato y especificación del CLI tareas
@@ -41,11 +42,12 @@ docs/
 | [04. Motor APA 7](02-motores-documentales/01-motor-apa7.md) | Maquetación bajo el estándar APA 7 (estudiante), citación y bibliografía. | `plantillas/apa_docx.py`, `plantillas/motor_base.py`, `plantillas/fuentes_comunes.py` |
 | [05. Motor Institucional y Temas](02-motores-documentales/02-motor-institucional-y-temas.md) | Maquetación configurable por presets/JSON (`academico`, `tecnico`, `ejecutivo`, `ieee`), extractor de `.docx`, OMML y bloques editoriales. | `plantillas/formato_institucional.py`, `plantillas/temas.py`, `plantillas/extractor_tema.py`, `plantillas/omml.py`, `plantillas/bloques.py` |
 | [06. Componentes Visuales y Tablas](02-motores-documentales/03-componentes-visuales-y-tablas.md) | Terminales 300 DPI, tarjetas académicas sin barra lateral, código WordML y tablas (APA 7 / Grid). | `plantillas/visual.py`, `plantillas/apa_docx.py`, `plantillas/bloques.py` |
-| [07. Especificación CLI](03-herramientas-y-cli/01-especificacion-cli-tareas.md) | Comandos del despachador `tareas` (subcomandos, flags y códigos de salida). | `plantillas/tareas.py`, `plantillas/cli/`, `tareas`, `tareas.bat` |
-| [08. Auditoría Estática](03-herramientas-y-cli/02-auditoria-estatica-comprobar.md) | Motor de verificación WordML, estética editorial, proporciones y auditoría global. | `plantillas/comprobar.py`, `plantillas/cli/comandos_documentales.py` |
-| [09. Empaquetado PEP 621](04-infraestructura-y-portabilidad/01-empaquetado-pep621-y-entornos.md) | Instalación estándar editable, dependencias, calidad y entorno IDE. | `pyproject.toml`, `requirements.txt`, `.vscode/settings.json`, `Makefile` |
-| [10. Multiplataforma](04-infraestructura-y-portabilidad/02-soporte-multiplataforma.md) | Scripts de aprovisionamiento en Linux, macOS y Windows. | `setup.sh`, `setup.bat`, `plantillas/cli/servicio_pdf.py` |
-| [11. Seguridad y Hooks](04-infraestructura-y-portabilidad/03-seguridad-y-githooks.md) | Controles preventivos contra fugas de `.env`, `materias/` y credenciales. | `.githooks/pre-commit`, `.env.example`, `.gitignore` |
+| [07. Entrada Declarativa, Citas y Preview](02-motores-documentales/04-entrada-declarativa-citas-y-preview.md) | Compilador Markdown/YAML, citación APA 7/IEEE/Vancouver y vista previa de temas. | `plantillas/markdown_docx.py`, `plantillas/preview_tema.py`, `plantillas/apa_docx.py` |
+| [08. Especificación CLI](03-herramientas-y-cli/01-especificacion-cli-tareas.md) | Comandos del despachador `tareas` (subcomandos, flags y códigos de salida). | `plantillas/tareas.py`, `plantillas/cli/`, `tareas`, `tareas.bat` |
+| [09. Auditoría Estática](03-herramientas-y-cli/02-auditoria-estatica-comprobar.md) | Motor de verificación WordML, estética editorial, proporciones y auditoría global. | `plantillas/comprobar.py`, `plantillas/cli/comandos_documentales.py` |
+| [10. Empaquetado PEP 621](04-infraestructura-y-portabilidad/01-empaquetado-pep621-y-entornos.md) | Instalación estándar editable, dependencias, calidad y entorno IDE. | `pyproject.toml`, `requirements.txt`, `.vscode/settings.json`, `Makefile` |
+| [11. Multiplataforma](04-infraestructura-y-portabilidad/02-soporte-multiplataforma.md) | Scripts de aprovisionamiento en Linux, macOS y Windows. | `setup.sh`, `setup.bat`, `plantillas/cli/servicio_pdf.py` |
+| [12. Seguridad y Hooks](04-infraestructura-y-portabilidad/03-seguridad-y-githooks.md) | Controles preventivos contra fugas de `.env`, `materias/` y credenciales. | `.githooks/pre-commit`, `.env.example`, `.gitignore` |
 
 ---
 

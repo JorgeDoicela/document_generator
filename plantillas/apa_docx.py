@@ -649,11 +649,40 @@ def convertir_a_grises(carpeta_capturas, patrones=("*.png", "*.jpg", "*.jpeg")):
 
 
 # --------------------------------------------------------------------------
-# Citas y referencias APA 7
+# Citas y referencias (APA 7, IEEE y Vancouver)
 # --------------------------------------------------------------------------
+ESTILOS_CITACION = ("apa7", "ieee", "vancouver")
+
+
+def _normalizar_estilo_citacion(estilo: str) -> str:
+    clave = (estilo or "apa7").strip().lower()
+    if clave in ("apa", "apa7", "apa 7"):
+        return "apa7"
+    if clave in ("ieee", "vancouver"):
+        return clave
+    raise ValueError(f"Estilo de citación no soportado: {estilo!r}. Válidos: {', '.join(ESTILOS_CITACION)}")
+
+
 def _apellido(autor: str) -> str:
     """'Ramos, J. A.' → 'Ramos'; 'Oracle' → 'Oracle'."""
     return autor.split(",")[0].strip()
+
+
+def _autor_ieee(autor: str) -> str:
+    """'Ramos, J. A.' → 'J. A. Ramos'; 'Oracle' → 'Oracle'."""
+    if "," not in autor:
+        return autor.strip()
+    apellido, iniciales = [p.strip() for p in autor.split(",", 1)]
+    return f"{iniciales} {apellido}".strip() if iniciales else apellido
+
+
+def _autor_vancouver(autor: str) -> str:
+    """'Ramos, J. A.' → 'Ramos JA'; 'Oracle' → 'Oracle'."""
+    if "," not in autor:
+        return autor.strip()
+    apellido, iniciales = [p.strip() for p in autor.split(",", 1)]
+    inics_limpias = "".join(ch for ch in iniciales if ch.isalpha()).upper()
+    return f"{apellido} {inics_limpias}".strip() if inics_limpias else apellido
 
 
 def _unir(elementos, conector="y"):
@@ -663,9 +692,12 @@ def _unir(elementos, conector="y"):
 
 
 class Bibliografia:
-    """Lista de referencias APA 7 con citas en el texto.
+    """Gestor bibliográfico multi-estilo (APA 7, IEEE numérico y Vancouver).
 
-        bib = Bibliografia()
+        bib = Bibliografia()                    # APA 7 por defecto
+        bib_ieee = Bibliografia(estilo="ieee")  # IEEE numérico [1]
+        bib_van = Bibliografia(estilo="vancouver")  # Vancouver numérico (1)
+
         bib.agregar("ramos2024", ["Ramos, J.", "Pérez, A."], 2024,
                     "Bases de datos relacionales", "Alfaomega")
         bib.agregar("oracle2024", ["Oracle"], 2024, "MySQL 8.4 reference manual",
@@ -673,9 +705,9 @@ class Bibliografia:
         bib.agregar("lee2023", ["Lee, K."], 2023, "Indexing strategies",
                     "Journal of Databases", detalles="12(3), 45–60", tipo="articulo")
 
-        bib.cita("ramos2024")            → '(Ramos y Pérez, 2024)'
-        bib.cita("ramos2024", "p. 15")   → '(Ramos y Pérez, 2024, p. 15)'
-        bib.cita_narrativa("lee2023")    → 'Lee (2023)'
+        bib.cita("ramos2024")            → '(Ramos y Pérez, 2024)' | '[1]' | '(1)'
+        bib.cita("ramos2024", "p. 15")   → '(Ramos y Pérez, 2024, p. 15)' | '[1, p. 15]' | '(1, p. 15)'
+        bib.cita_narrativa("lee2023")    → 'Lee (2023)' | 'Lee [2]' | 'Lee (2)'
         referencias(doc, bib)            → sección Referencias en página nueva
 
     tipo="articulo" o "capitulo" pone en cursiva la fuente (revista, libro);
@@ -683,9 +715,21 @@ class Bibliografia:
     entrada completa (con *cursivas* entre asteriscos).
     """
 
-    def __init__(self):
-        self._fuentes = {}
-        self._citadas = set()
+    def __init__(self, estilo: str = "apa7"):
+        self.estilo = _normalizar_estilo_citacion(estilo)
+        self._fuentes: dict[str, dict] = {}
+        self._citadas: set[str] = set()
+        self._orden_aparicion: list[str] = []
+
+    @property
+    def es_numerico(self) -> bool:
+        return self.estilo in ("ieee", "vancouver")
+
+    def numero(self, clave: str) -> int:
+        """Devuelve el índice numérico (1-based) asignado por orden de aparición."""
+        if clave not in self._orden_aparicion:
+            self._fuente(clave)
+        return self._orden_aparicion.index(clave) + 1
 
     def agregar(self, clave, autores, anio, titulo="", fuente="", *, url="",
                 detalles="", tipo="libro", texto=""):
@@ -704,7 +748,9 @@ class Bibliografia:
         if clave not in self._fuentes:
             disponibles = ", ".join(sorted(self._fuentes)) or "ninguna"
             raise KeyError(f"No hay referencia '{clave}' (hay: {disponibles})")
-        self._citadas.add(clave)
+        if clave not in self._citadas:
+            self._citadas.add(clave)
+            self._orden_aparicion.append(clave)
         return self._fuentes[clave]
 
     def _autores_cita(self, f):
@@ -714,12 +760,28 @@ class Bibliografia:
         return " y ".join(apellidos)
 
     def cita(self, *claves, pagina=""):
-        """Cita parentética: '(Ramos, 2024)'; varias claves → '(Lee, 2023; Ramos, 2024)'.
-        Una segunda posición textual se toma como página: cita('x', 'p. 15')."""
+        """Cita en el texto según el estilo activo:
+        - apa7: '(Ramos, 2024)' / '(Lee, 2023; Ramos, 2024)'
+        - ieee: '[1]' / '[1], [2]' / '[1, p. 15]'
+        - vancouver: '(1)' / '(1,2)' / '(1, p. 15)'
+        Una segunda posición textual se toma como página: cita('x', 'p. 15').
+        """
         lista_claves = list(claves)
         if len(lista_claves) == 2 and lista_claves[1] not in self._fuentes and not pagina:
             pagina = str(lista_claves[1])
             lista_claves = lista_claves[:1]
+
+        if self.estilo == "ieee":
+            nums = [self.numero(clave) for clave in lista_claves]
+            if len(nums) == 1 and pagina:
+                return f"[{nums[0]}, {pagina}]"
+            return ", ".join(f"[{n}]" for n in nums)
+
+        if self.estilo == "vancouver":
+            nums = [self.numero(clave) for clave in lista_claves]
+            cuerpo = ",".join(str(n) for n in nums)
+            return f"({cuerpo}, {pagina})" if pagina else f"({cuerpo})"
+
         partes = []
         for clave in lista_claves:
             f = self._fuente(clave)
@@ -729,17 +791,74 @@ class Bibliografia:
         return f"({texto}, {pagina})" if pagina else f"({texto})"
 
     def cita_narrativa(self, clave, pagina=""):
-        """Cita narrativa: 'Ramos y Pérez (2024)'."""
+        """Cita narrativa:
+        - apa7: 'Ramos y Pérez (2024)'
+        - ieee: 'Ramos y Pérez [1]'
+        - vancouver: 'Ramos y Pérez (1)'
+        """
         f = self._fuente(clave)
+        if self.estilo == "ieee":
+            n = self.numero(clave)
+            suf = f", {pagina}" if pagina else ""
+            return f"{self._autores_cita(f)} [{n}{suf}]"
+        if self.estilo == "vancouver":
+            n = self.numero(clave)
+            suf = f", {pagina}" if pagina else ""
+            return f"{self._autores_cita(f)} ({n}{suf})"
         sufijo = f", {pagina}" if pagina else ""
         return f"{self._autores_cita(f)} ({f['anio']}{sufijo})"
 
     def entrada(self, clave) -> str:
         f = self._fuentes[clave]
         if f.get("texto"):
+            if self.estilo == "ieee" and not re.match(r"^\[\d+\]\s+", str(f["texto"]).strip()):
+                return f"[{self.numero(clave)}] {f['texto']}"
+            if self.estilo == "vancouver" and not re.match(r"^\d+\.\s+", str(f["texto"]).strip()):
+                return f"{self.numero(clave)}. {f['texto']}"
             return str(f["texto"])
-        autores = _unir(f["autores"])
 
+        if self.estilo == "ieee":
+            n = self.numero(clave)
+            autores = _unir([_autor_ieee(a) for a in f["autores"]])
+            es_art = f["tipo"] in ("articulo", "capitulo")
+            partes = [f"[{n}] {autores},"]
+            if f["titulo"]:
+                partes.append(f"\"{f['titulo']},\"" if es_art else f"*{f['titulo']}*.")
+            fuente = f["fuente"]
+            if fuente and fuente not in f["autores"]:
+                fuente_fmt = f"*{fuente}*" if es_art else fuente
+                bloque_f = f"{fuente_fmt}, {f['detalles']}" if f["detalles"] else fuente_fmt
+                partes.append(f"{bloque_f}, {f['anio']}.")
+            elif f["detalles"]:
+                partes.append(f"{f['detalles']}, {f['anio']}.")
+            else:
+                partes.append(f"{f['anio']}.")
+            if f["url"]:
+                partes.append(f"Disponible en: {f['url']}")
+            return " ".join(partes)
+
+        if self.estilo == "vancouver":
+            n = self.numero(clave)
+            autores = ", ".join(_autor_vancouver(a) for a in f["autores"])
+            if not autores.endswith("."):
+                autores += "."
+            partes = [f"{n}. {autores}"]
+            if f["titulo"]:
+                partes.append(f"{f['titulo'].rstrip('.')}.")
+            fuente = f["fuente"]
+            if fuente and fuente not in f["autores"]:
+                fuente_txt = f"{fuente.rstrip('.')}."
+                anio_det = f"{f['anio']};{f['detalles'].rstrip('.')}." if f["detalles"] else f"{f['anio']}."
+                partes.append(f"{fuente_txt} {anio_det}")
+            elif f["detalles"]:
+                partes.append(f"{f['anio']};{f['detalles'].rstrip('.')}.")
+            else:
+                partes.append(f"{f['anio']}.")
+            if f["url"]:
+                partes.append(f"Disponible en: {f['url']}")
+            return " ".join(partes)
+
+        autores = _unir(f["autores"])
         if not autores.endswith("."):
             autores += "."
         partes = [f"{autores} ({f['anio']})."]
@@ -760,6 +879,9 @@ class Bibliografia:
         return sorted(set(self._fuentes) - self._citadas)
 
     def ordenadas(self):
+        if self.es_numerico:
+            return list(self._orden_aparicion)
+
         def orden(clave):
             f = self._fuentes[clave]
             return ([_apellido(a).lower() for a in f["autores"]], f["anio"])
@@ -767,19 +889,22 @@ class Bibliografia:
 
 
 def referencias(doc, bib=None, *, criterios=None, nueva_pagina=True, entradas=()):
-    """Sección 'Referencias' (APA 7: página nueva, título centrado en negrita,
-    sangría francesa, orden alfabético). Incluye las fuentes de `bib` que se
-    hayan citado; `entradas` añade referencias escritas a mano."""
+    """Sección 'Referencias' (APA 7 alfabético o IEEE/Vancouver por orden de aparición).
+    Incluye las fuentes de `bib` que se hayan citado; `entradas` añade referencias manuales."""
     if nueva_pagina:
         salto_de_pagina(doc)
     titulo(doc, "Referencias", 1, criterios=criterios)
     textos = [bib.entrada(c) for c in bib.ordenadas()] if bib else []
-    textos += list(entradas)
-    for texto in sorted(textos, key=lambda t: t.lstrip("*").lower()):
+    textos_manuales = list(entradas)
+    if bib and bib.es_numerico:
+        lista_final = textos + textos_manuales
+    else:
+        lista_final = sorted(textos + textos_manuales, key=lambda t: t.lstrip("*").lower())
+    for texto in lista_final:
         referencia(doc, texto)
     if bib and bib.no_citadas():
-        print("Aviso: referencias registradas pero nunca citadas (APA no las admite; "
-              "no se incluyen): " + ", ".join(bib.no_citadas()))
+        print("Aviso: referencias registradas pero nunca citadas (no se incluyen): "
+              + ", ".join(bib.no_citadas()))
 
 
 # --------------------------------------------------------------------------

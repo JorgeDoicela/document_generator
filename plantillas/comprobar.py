@@ -45,6 +45,10 @@ _CITA_NARRATIVA = re.compile(rf"({_APELLIDO})(?:\set\sal\.|\s(?:y|e|&)\s{_APELLI
 _PARENTESIS = re.compile(r"\(([^()]+)\)")
 _PARTE_CITA = re.compile(rf"^(?:véase\s|ver\s|cf\.\s)?({_APELLIDO})(?:\set\sal\.|\s(?:y|e|&)\s.+?)?,\s({_ANIO})")
 _PARTE_CITA_CORP = re.compile(rf"^(?:véase\s|ver\s|cf\.\s)?({_AUTOR_CORPORATIVO}),\s({_ANIO})")
+_CITA_IEEE = re.compile(r"(?<![A-Za-z0-9_])\[([1-9]\d*(?:\s*(?:,|[-–])\s*[1-9]\d*)*)(?:,\s*(?:p\.|pp\.|sec\.|cap\.)\s*[^]]+)?\]")
+_CITA_VANCOUVER = re.compile(r"(?<![A-Za-z0-9_])\(([1-9]\d*(?:\s*(?:,|[-–])\s*[1-9]\d*)*)(?:,\s*(?:p\.|pp\.)\s*[^)]+)?\)")
+_REF_IEEE = re.compile(r"^\[(\d+)\]\s+")
+_REF_VANCOUVER = re.compile(r"^(\d+)\.\s+")
 _PALABRAS_VACIAS = set(
     "para como sobre entre desde hasta donde cuando cada todo toda todos todas este esta estos "
     "estas ese esa con sin por los las del una uno unos unas que sus otro otra mediante "
@@ -93,6 +97,8 @@ class Analisis:
     transversales: set = field(default_factory=set)
     pendientes: list = field(default_factory=list)   # (sección, texto)
     citas: list = field(default_factory=list)         # (apellido, año, contexto)
+    citas_ieee: list = field(default_factory=list)    # (numero, contexto)
+    citas_vancouver: list = field(default_factory=list)  # (numero, contexto)
     anomalias_formato: list = field(default_factory=list)
     avisos_tipograficos: list = field(default_factory=list)
 
@@ -132,6 +138,29 @@ def _citas(texto: str):
             c = _PARTE_CITA.match(p_limpia) or _PARTE_CITA_CORP.match(p_limpia)
             if c:
                 yield c[1], c[2].replace(" ", "")
+
+
+def _expandir_numeros(spec: str) -> list[int]:
+    """Expande '1, 2-4' en [1, 2, 3, 4]."""
+    nums: list[int] = []
+    for parte in spec.split(","):
+        p = parte.strip()
+        if not p:
+            continue
+        rango = re.match(r"^(\d+)\s*[-–]\s*(\d+)$", p)
+        if rango:
+            ini, fin = int(rango.group(1)), int(rango.group(2))
+            if ini <= fin and (fin - ini) <= 50:
+                nums.extend(range(ini, fin + 1))
+        elif p.isdigit():
+            nums.append(int(p))
+    return nums
+
+
+def _citas_numericas(texto: str, patron: re.Pattern):
+    for m in patron.finditer(texto):
+        for n in _expandir_numeros(m.group(1)):
+            yield n
 
 
 def analizar(ruta_docx: Path) -> Analisis:
@@ -215,6 +244,10 @@ def analizar(ruta_docx: Path) -> Analisis:
                         a.pendientes.append((abiertas[-1].titulo if abiertas else "tabla", m[0]))
                     for apellido, anio in _citas(txt_c):
                         a.citas.append((apellido, anio, txt_c[:60]))
+                    for num in _citas_numericas(txt_c, _CITA_IEEE):
+                        a.citas_ieee.append((num, txt_c[:60]))
+                    for num in _citas_numericas(txt_c, _CITA_VANCOUVER):
+                        a.citas_vancouver.append((num, txt_c[:60]))
                     if "**" in txt_c:
                         a.avisos_tipograficos.append(
                             f"Fuga de sintaxis Markdown en tabla (asteriscos literales '**'): «{txt_c[:50]}...»."
@@ -329,6 +362,10 @@ def analizar(ruta_docx: Path) -> Analisis:
             a.pendientes.append((abiertas[-1].titulo if abiertas else "inicio", m[0]))
         for apellido, anio in _citas(texto):
             a.citas.append((apellido, anio, texto[:60]))
+        for num in _citas_numericas(texto, _CITA_IEEE):
+            a.citas_ieee.append((num, texto[:60]))
+        for num in _citas_numericas(texto, _CITA_VANCOUVER):
+            a.citas_vancouver.append((num, texto[:60]))
     return a
 
 
@@ -559,18 +596,45 @@ def comprobar(carpeta: Path, docx: Path | None = None, hoy: datetime.date | None
     for aviso in a.avisos_tipograficos:
         inf.avisos.append(f"Aviso de formato tipográfico: {aviso}")
 
-    if a.citas and not a.hay_seccion_referencias:
-        inf.errores.append(f"Hay {len(a.citas)} citas en el texto pero no hay sección Referencias.")
+    if (a.citas or a.citas_ieee) and not a.hay_seccion_referencias:
+        total_c = len(a.citas) or len(a.citas_ieee)
+        inf.errores.append(f"Hay {total_c} citas en el texto pero no hay sección Referencias.")
     elif a.hay_seccion_referencias:
         if not a.referencias:
             inf.avisos.append("La sección Referencias está vacía.")
-        huerfanas = sorted({(ap, an) for ap, an, _ in a.citas
-                            if not any(_coincide(ap, an, r) for r in a.referencias)})
-        for ap, an in huerfanas:
-            inf.errores.append(f"Cita sin referencia: {ap} ({an}).")
-        for r in a.referencias:
-            if not any(_coincide(ap, an, r) for ap, an, _ in a.citas):
-                inf.avisos.append(f"Referencia que no se cita en el texto: {r[:70]}")
+        else:
+            refs_ieee = {
+                int(m.group(1)): r
+                for r in a.referencias
+                if (m := _REF_IEEE.match(r.strip()))
+            }
+            refs_van = {
+                int(m.group(1)): r
+                for r in a.referencias
+                if (m := _REF_VANCOUVER.match(r.strip()))
+            }
+            if refs_ieee and len(refs_ieee) >= len(a.referencias) / 2:
+                citados = {n for n, _ in a.citas_ieee}
+                for n in sorted(citados - set(refs_ieee)):
+                    inf.errores.append(f"Cita numérica sin referencia: [{n}].")
+                for n, r in refs_ieee.items():
+                    if n not in citados:
+                        inf.avisos.append(f"Referencia que no se cita en el texto: {r[:70]}")
+            elif refs_van and len(refs_van) >= len(a.referencias) / 2:
+                citados = {n for n, _ in a.citas_vancouver}
+                for n in sorted(citados - set(refs_van)):
+                    inf.errores.append(f"Cita numérica sin referencia: ({n}).")
+                for n, r in refs_van.items():
+                    if n not in citados:
+                        inf.avisos.append(f"Referencia que no se cita en el texto: {r[:70]}")
+            else:
+                huerfanas = sorted({(ap, an) for ap, an, _ in a.citas
+                                    if not any(_coincide(ap, an, r) for r in a.referencias)})
+                for ap, an in huerfanas:
+                    inf.errores.append(f"Cita sin referencia: {ap} ({an}).")
+                for r in a.referencias:
+                    if not any(_coincide(ap, an, r) for ap, an, _ in a.citas):
+                        inf.avisos.append(f"Referencia que no se cita en el texto: {r[:70]}")
 
     # Frescura de los archivos
     script = carpeta / "generar_documento.py"
@@ -605,8 +669,14 @@ def imprimir(inf: Informe, carpeta: Path) -> None:
         print(f"  Documento: {inf.docx.name}")
     if inf.analisis:
         a = inf.analisis
+        if a.referencias and any(_REF_IEEE.match(r.strip()) for r in a.referencias):
+            total_citas = len(a.citas_ieee)
+        elif a.referencias and any(_REF_VANCOUVER.match(r.strip()) for r in a.referencias):
+            total_citas = len(a.citas_vancouver)
+        else:
+            total_citas = len(a.citas)
         print(f"  Cuerpo: {a.palabras_cuerpo} palabras, {len(a.secciones)} secciones, "
-              f"{len(a.citas)} citas, {len(a.referencias)} referencias")
+              f"{total_citas} citas, {len(a.referencias)} referencias")
     if inf.coberturas:
         print("\n  Rúbrica")
         ancho = max(len(c.criterio.id) for c in inf.coberturas)

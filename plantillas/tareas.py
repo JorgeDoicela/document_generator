@@ -7,13 +7,14 @@ Uso (desde la raíz del repositorio):
     python plantillas/tareas.py tarea <materia> <codigo> "<Título>" [--tipo T]
     python plantillas/tareas.py rubrica <tarea> [--importar archivo.docx]
     python plantillas/tareas.py esqueleto <tarea> [--palabras N] [--forzar]
-    python plantillas/tareas.py generar <tarea> [--sin-pdf]
+    python plantillas/tareas.py generar <tarea> [--desde-md] [--sin-pdf]
+    python plantillas/tareas.py compilar <archivo.md> [--salida DOCX] [--tema TEMA] [--citas ESTILO] [--sin-pdf]
     python plantillas/tareas.py comprobar <tarea> [--actualizar]
     python plantillas/tareas.py auditar [<materia>] [--actualizar]
     python plantillas/tareas.py pdf <archivo.docx | carpeta>
     python plantillas/tareas.py estado [<materia>]
     python plantillas/tareas.py marcar <tarea> <pendiente|lista|entregada>
-    python plantillas/tareas.py temas [--crear NOMBRE] [--extraer ARCHIVO.DOCX] [--base PRESET] [--local]
+    python plantillas/tareas.py temas [--crear NOMBRE] [--extraer ARCHIVO.DOCX] [--preview TEMA|todos] [--base PRESET] [--local]
 
 Ejemplos:
     python plantillas/tareas.py materia programacion-web-2 "Programación Web 2"
@@ -37,13 +38,14 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import extractor_tema
     import plataforma
+    import preview_tema
     import temas as temas_mod
     from cli import comandos_documentales as doc_cmds
     from cli import comandos_gestion as gestion_cmds
     from cli import servicio_pdf, tablas
     from config import RAIZ
 else:
-    from . import extractor_tema, plataforma
+    from . import extractor_tema, plataforma, preview_tema
     from . import temas as temas_mod
     from .cli import comandos_documentales as doc_cmds
     from .cli import comandos_gestion as gestion_cmds
@@ -146,6 +148,10 @@ def cmd_generar(args) -> None:
     doc_cmds.cmd_generar(args, carpeta_tarea, python_del_repo, ruta_relativa, servicio_pdf.convertir_pdf, RAIZ)
 
 
+def cmd_compilar(args) -> None:
+    doc_cmds.cmd_compilar(args, ruta_relativa, servicio_pdf.convertir_pdf, RAIZ)
+
+
 def cmd_comprobar(args) -> None:
     doc_cmds.cmd_comprobar(args, carpeta_tarea, MATERIAS)
 
@@ -163,7 +169,24 @@ def cmd_estado(args) -> None:
 
 
 def cmd_temas(args) -> None:
-    """Lista los temas documentales, crea un molde o extrae un tema desde un .docx."""
+    """Lista los temas documentales, crea un molde, extrae desde .docx o genera vista previa."""
+    if getattr(args, "preview", None):
+        try:
+            rutas = preview_tema.generar_previews(
+                args.preview,
+                salida=getattr(args, "salida", None),
+                estilo_citas=getattr(args, "citas", None),
+            )
+        except (FileNotFoundError, ValueError) as exc:
+            sys.exit(f"Error al generar vista previa: {exc}")
+        for r in rutas:
+            print(f"Vista previa DOCX: {ruta_relativa(r)}")
+        if not getattr(args, "sin_pdf", False):
+            fallos = servicio_pdf.convertir_pdf(rutas, RAIZ)
+            if fallos:
+                sys.exit(1)
+        return
+
     if args.extraer:
         try:
             res = extractor_tema.extraer_tema_desde_docx(
@@ -234,9 +257,19 @@ def main() -> None:
     p.add_argument("--palabras", type=int, help="extensión total (por defecto la de TAREA.md o 1500)")
     p.add_argument("--forzar", action="store_true", help="reescribe secciones con texto (copia .bak)")
 
-    p = sub.add_parser("generar", help="ejecuta generar_documento.py, comprueba y convierte a PDF")
+    p = sub.add_parser("generar", help="ejecuta generar_documento.py (o compila documento.md), comprueba y convierte a PDF")
     p.add_argument("tarea", help="carpeta de la tarea")
+    p.add_argument("--desde-md", action="store_true", help="compila documento.md en lugar de ejecutar generar_documento.py")
+    p.add_argument("--tema", default=None, help="sobrescribe el tema al compilar desde documento.md")
+    p.add_argument("--citas", choices=["apa7", "ieee", "vancouver"], default=None, help="estilo de citación al compilar desde documento.md")
     p.add_argument("--sin-pdf", action="store_true", help="no convierte a PDF")
+
+    p = sub.add_parser("compilar", help="compila un archivo Markdown/YAML declarativo a .docx y .pdf")
+    p.add_argument("archivo", help="ruta al archivo .md con frontmatter YAML")
+    p.add_argument("--salida", "-o", default=None, help="ruta de salida del archivo .docx")
+    p.add_argument("--tema", default=None, help="sobrescribe el tema declarado en el frontmatter")
+    p.add_argument("--citas", choices=["apa7", "ieee", "vancouver"], default=None, help="sobrescribe el estilo de citación (apa7, ieee, vancouver)")
+    p.add_argument("--sin-pdf", action="store_true", help="genera únicamente el .docx sin convertir a PDF")
 
     p = sub.add_parser("comprobar", help="verifica el .docx contra la rúbrica")
     p.add_argument("tarea", nargs="?", default="todas", help="carpeta de la tarea (o 'todas')")
@@ -262,9 +295,13 @@ def main() -> None:
     p.add_argument("estado", choices=ESTADOS)
     p.add_argument("--forzar", action="store_true", help="marca aunque la comprobación falle")
 
-    p = sub.add_parser("temas", help="lista temas, crea un molde o extrae el formato desde un .docx")
+    p = sub.add_parser("temas", help="lista temas, crea un molde, extrae desde .docx o genera vista previa")
     p.add_argument("--crear", metavar="NOMBRE", default=None, help="crea un molde theme.json personalizable")
     p.add_argument("--extraer", metavar="DOCX", default=None, help="extrae automáticamente tipografía, márgenes, colores e imágenes desde un .docx")
+    p.add_argument("--preview", metavar="TEMA", default=None, help="genera un documento de muestra (.docx/.pdf) para un tema o 'todos'")
+    p.add_argument("--salida", "-o", default=None, help="ruta/carpeta de salida al usar --preview")
+    p.add_argument("--citas", choices=["apa7", "ieee", "vancouver"], default=None, help="estilo de citación en la vista previa")
+    p.add_argument("--sin-pdf", action="store_true", help="al usar --preview, genera solo .docx sin convertir a PDF")
     p.add_argument("--nombre", metavar="NOMBRE", default=None, help="nombre del tema al usar --extraer (por defecto el nombre del archivo)")
     p.add_argument("--base", default="academico", help="preset base al crear un tema (defecto: academico)")
     p.add_argument("--local", action="store_true", help="crea el tema en themes/local/ (ignorado por Git)")
@@ -278,6 +315,7 @@ def main() -> None:
         "rubrica": cmd_rubrica,
         "esqueleto": cmd_esqueleto,
         "generar": cmd_generar,
+        "compilar": cmd_compilar,
         "comprobar": cmd_comprobar,
         "auditar": cmd_auditar,
         "pdf": cmd_pdf,

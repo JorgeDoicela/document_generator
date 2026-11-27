@@ -18,13 +18,17 @@ El principio rector del sistema es determinista: los criterios de evaluación o 
    - **Bloques editoriales universales (`bloques.py`):** texto enriquecido Markdown (`**negrita**`, `*cursiva*`, `` `código inline` ``, superíndices/subíndices), párrafos estructurados sin estiramiento tipográfico, resúmenes ejecutivos con palabras clave, índices automáticos nativos (TOC), metadatos Core Properties y figuras con pies idempotentes.
    - **Tablas con layout fijo (`w:tblLayout="fixed"`):** soporte nativo para estilo **APA 7** (3 líneas horizontales) y **Grid** (cuadrícula completa), con anchos proporcionales y repetición de cabeceras en saltos de página.
    - **Renderizadores visuales a 300 DPI (`visual.py`):** capturas sintéticas de terminal CLI (temas `Dark` y `Light`), bloques de código estilizados y tarjetas académicas sobrias.
-3. **Pipeline Guiado por Rúbricas y Auditoría Estática (`rubrica.py`, `esqueleto.py`, `comprobar.py`):**
+3. **Entrada Declarativa Markdown/YAML y Citación Multi-Estilo (`markdown_docx.py`, `apa_docx.py`, `preview_tema.py`):**
+   - Compila archivos Markdown con frontmatter YAML directamente a `.docx`/`.pdf` (`./tareas compilar documento.md`) conservando marcadores de rúbrica (`{#C1}`), ecuaciones OMML (`$$ ... $$`), tablas, código y citas declarativas (`[@clave]`, `@clave`).
+   - Soporta citación y referencias en **APA 7**, **IEEE numérico (`[1]`)** y **Vancouver (`(1)`)**, con auditoría estática biyectiva automática en `comprobar.py`.
+   - Genera muestras visuales rápidas de cualquier tema o de todos los temas con `./tareas temas --preview <tema|todos>`.
+4. **Pipeline Guiado por Rúbricas y Auditoría Estática (`rubrica.py`, `esqueleto.py`, `comprobar.py`):**
    - Importa rúbricas desde `.docx` o `TAREA.md` y genera esqueletos ponderados por puntaje.
-   - Audita el `.docx` a nivel XML: cobertura del 100% de criterios (`w:bookmarkStart`), proporcionalidad de palabras, correspondencia biyectiva entre citas y referencias APA 7, detección de fugas LaTeX/Markdown y prevención de defectos visuales.
-4. **Ecosistema de Agentes IA (`.agents/`):**
+   - Audita el `.docx` a nivel XML: cobertura del 100% de criterios (`w:bookmarkStart`), proporcionalidad de palabras, correspondencia biyectiva entre citas y referencias (APA 7, IEEE y Vancouver), detección de fugas LaTeX/Markdown y prevención de defectos visuales.
+5. **Ecosistema de Agentes IA (`.agents/`):**
    - Incluye reglas (`AGENTS.md`) y 4 skills especializadas (`.agents/skills/`) para flujos asistidos por IA en análisis de consignas, rigor académico, ingeniería OpenXML y laboratorios técnicos.
-5. **Privacidad por Diseño:**
-   - El workspace personal del usuario (`materias/*`, conservando `materias/.gitkeep`), los temas privados (`themes/local/`) y `.env` están excluidos de Git por defecto.
+6. **Privacidad por Diseño:**
+   - El workspace personal del usuario (`materias/*`, conservando `materias/.gitkeep`), los temas privados (`themes/local/`), las vistas previas (`themes/.previews/`) y `.env` están excluidos de Git por defecto.
 
 ---
 
@@ -52,10 +56,14 @@ Copy-Item .env.example .env
 .\tareas.ps1 temas
 ```
 
-### Probar el Ejemplo Reproducible en 1 Comando
+### Probar los Ejemplos Reproducibles en 1 Comando
 ```bash
+# Ejemplo programático (Python -> DOCX)
 python examples/ejemplo_completo/generar_documento.py
 ./tareas comprobar examples/ejemplo_completo
+
+# Ejemplo declarativo (Markdown/YAML -> DOCX con citas IEEE y OMML)
+./tareas compilar examples/ejemplo_markdown/documento.md --sin-pdf
 ```
 
 ---
@@ -105,12 +113,13 @@ El comando `--extraer` analiza el OpenXML del documento de referencia y genera `
 | Comando | Descripción |
 |---|---|
 | `./tareas verificar` | Comprueba entorno (`.venv`, dependencias, `.env`, LibreOffice y Git). |
-| `./tareas temas [--crear NOMBRE] [--extraer DOCX] [--base PRESET] [--local]` | Lista presets/temas, crea un molde `theme.json` o extrae formato desde un `.docx`. |
+| `./tareas temas [--crear NOMBRE] [--extraer DOCX] [--preview TEMA\|todos]` | Lista presets/temas, crea un molde `theme.json`, extrae formato desde un `.docx` o genera vista previa visual. |
+| `./tareas compilar <archivo.md> [--tema TEMA] [--citas apa7\|ieee\|vancouver] [--sin-pdf]` | Compila un documento declarativo Markdown/YAML a `.docx` y `.pdf` (auditando contra `TAREA.md` si existe). |
 | `./tareas materia <carpeta> "<Nombre>"` | Crea una nueva materia dentro de `materias/` (workspace local ignorado por Git). |
 | `./tareas tarea <materia> <código> "<Título>" [--grupal] [--formato TEMA]` | Inicializa una tarea con su estructura (`TAREA.md`, `enunciado/`, `capturas/`). |
 | `./tareas rubrica <tarea> [--importar docx]` | Visualiza o importa la rúbrica oficial en `TAREA.md`. |
 | `./tareas esqueleto <tarea> [--palabras N]` | Genera secciones ponderadas por criterio en `generar_documento.py`. |
-| `./tareas generar <tarea> [--sin-pdf]` | Compila `.docx`, ejecuta auditoría estática y exporta a `.pdf`. |
+| `./tareas generar <tarea> [--desde-md] [--sin-pdf]` | Compila `generar_documento.py` (o `documento.md`), ejecuta auditoría estática y exporta a `.pdf`. |
 | `./tareas comprobar <tarea> [--actualizar]` | Audita el `.docx` contra la rúbrica y estándares OpenXML. |
 | `./tareas auditar [<materia>]` | Auditoría estática global de todas las tareas locales. |
 | `./tareas pdf <archivo.docx \| carpeta>` | Convierte archivos `.docx` a `.pdf` mediante LibreOffice aislado. |
@@ -130,7 +139,9 @@ document_generator/
 │   ├── omml.py                  # Motor matemático LaTeX -> Unicode -> OMML vectorial
 │   ├── bloques.py               # Componentes editoriales universales (Markdown, TOC, tablas, resumen)
 │   ├── formato_institucional.py # Motor configurable multi-propósito
-│   ├── apa_docx.py              # Motor APA 7 y gestor bibliográfico
+│   ├── apa_docx.py              # Motor APA 7 y gestor bibliográfico multi-estilo (APA 7, IEEE, Vancouver)
+│   ├── markdown_docx.py         # Compilador declarativo Markdown + frontmatter YAML -> .docx
+│   ├── preview_tema.py          # Generador de vistas previas visuales para presets y temas JSON
 │   ├── visual.py                # Terminales 300 DPI, código WordML y tablas fijas
 │   ├── rubrica.py / esqueleto.py / comprobar.py / ficha.py
 │   └── plataforma.py            # Abstracción multiplataforma (Linux, macOS, Windows)

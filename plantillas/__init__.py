@@ -8,8 +8,10 @@ from . import (
     extractor_tema,
     formato_institucional,
     fuentes_comunes,
+    markdown_docx,
     motor_base,
     omml,
+    preview_tema,
     temas,
 )
 
@@ -20,7 +22,9 @@ __all__ = [
     "extractor_tema",
     "formato_institucional",
     "fuentes_comunes",
+    "markdown_docx",
     "motor_base",
     "omml",
+    "preview_tema",
     "temas",
 ]

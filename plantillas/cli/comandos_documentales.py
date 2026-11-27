@@ -13,12 +13,13 @@ if _PLANTILLAS_DIR not in sys.path:
 if __package__ and "." in __package__:
     from .. import comprobar as comp
     from .. import esqueleto as esq
-    from .. import ficha, plataforma
+    from .. import ficha, markdown_docx, plataforma
     from .. import rubrica as rub
 else:
     import comprobar as comp  # type: ignore[no-redef]
     import esqueleto as esq  # type: ignore[no-redef]
     import ficha  # type: ignore[no-redef]
+    import markdown_docx  # type: ignore[no-redef]
     import plataforma  # type: ignore[no-redef]
     import rubrica as rub  # type: ignore[no-redef]
 
@@ -108,14 +109,30 @@ def cmd_generar(
     convertir_pdf_fn: Callable[[list, Optional[Path]], int],
     raiz: Path,
 ) -> None:
-    """Ejecuta generar_documento.py, audita el Word resultante y exporta a PDF."""
+    """Ejecuta generar_documento.py o compila documento.md, audita el Word y exporta a PDF."""
     carpeta = carpeta_tarea_fn(args.tarea)
     script = carpeta / "generar_documento.py"
-    if not script.exists():
-        sys.exit(f"No existe {ruta_relativa_fn(script)}")
-    r = subprocess.run([python_del_repo_fn(), str(script)], cwd=raiz, env=plataforma.entorno_utf8())
-    if r.returncode != 0:
-        sys.exit(f"generar_documento.py terminó con error ({r.returncode}).")
+    doc_md = carpeta / "documento.md"
+    usar_md = bool(getattr(args, "desde_md", False)) or (doc_md.exists() and not script.exists())
+
+    if usar_md:
+        if not doc_md.exists():
+            sys.exit(f"No existe {ruta_relativa_fn(doc_md)}")
+        try:
+            markdown_docx.compilar_markdown(
+                doc_md,
+                tema=getattr(args, "tema", None),
+                estilo_citas=getattr(args, "citas", None),
+                tarea=carpeta,
+            )
+        except (FileNotFoundError, ValueError, KeyError) as exc:
+            sys.exit(f"Error al compilar {ruta_relativa_fn(doc_md)}: {exc}")
+    else:
+        if not script.exists():
+            sys.exit(f"No existe {ruta_relativa_fn(script)} ni {ruta_relativa_fn(doc_md)}")
+        r = subprocess.run([python_del_repo_fn(), str(script)], cwd=raiz, env=plataforma.entorno_utf8())
+        if r.returncode != 0:
+            sys.exit(f"generar_documento.py terminó con error ({r.returncode}).")
     print()
     inf = comp.comprobar(carpeta)
     if inf.coberturas:
@@ -126,6 +143,45 @@ def cmd_generar(
         print()
         fallo_pdf = convertir_pdf_fn([inf.docx], raiz) > 0
     sys.exit(0 if inf.ok and not fallo_pdf else 1)
+
+
+def cmd_compilar(
+    args,
+    ruta_relativa_fn: Callable[[Path], str],
+    convertir_pdf_fn: Callable[[list, Optional[Path]], int],
+    raiz: Path,
+) -> None:
+    """Compila un archivo Markdown con frontmatter YAML a .docx y opcionalmente .pdf."""
+    origen = Path(args.archivo).resolve()
+    if not origen.is_file():
+        sys.exit(f"No existe el archivo Markdown: {args.archivo}")
+    try:
+        docx_generado = markdown_docx.compilar_markdown(
+            origen,
+            salida=getattr(args, "salida", None),
+            tema=getattr(args, "tema", None),
+            estilo_citas=getattr(args, "citas", None),
+        )
+    except (FileNotFoundError, ValueError, KeyError) as exc:
+        sys.exit(f"Error al compilar {origen.name}: {exc}")
+
+    ok = True
+    if (origen.parent / "TAREA.md").is_file():
+        print()
+        inf = comp.comprobar(origen.parent, docx=docx_generado)
+        if inf.coberturas:
+            comp.actualizar_tarea(origen.parent, inf)
+        comp.imprimir(inf, origen.parent)
+        ok = inf.ok
+
+    fallo_pdf = False
+    if not getattr(args, "sin_pdf", False):
+        print()
+        fallo_pdf = convertir_pdf_fn([docx_generado], raiz) > 0
+    else:
+        print(f"DOCX compilado: {ruta_relativa_fn(docx_generado)}")
+
+    sys.exit(0 if ok and not fallo_pdf else 1)
 
 
 def cmd_comprobar(

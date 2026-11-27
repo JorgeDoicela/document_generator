@@ -81,13 +81,13 @@ _PENDIENTE = re.compile(
 
 ---
 
-### 4. Auditoría Biyectiva de Citas y Referencias:
+### 4. Auditoría Biyectiva de Citas y Referencias (APA 7, IEEE y Vancouver):
 
-* **Extracción de Citas en el Texto:** Escanea citas narrativas (ej. `Fonseca (2016)`) y citas parentéticas (ej. `(Russell y Norvig, 2021; Epp, 2010)`).
-* **Extracción de Referencias:** Identifica la sección de título `Referencias` o `Bibliografía` y parsea cada entrada bibliográfica.
+* **Extracción de Citas en el Texto:** Escanea citas APA 7 narrativas (ej. `Fonseca (2016)`) y parentéticas (ej. `(Russell y Norvig, 2021; Epp, 2010)`), citas numéricas IEEE (`[1]`, `[2-3]`) y citas numéricas Vancouver (`(1)`, `(1,2)`), excluyendo indexación de código (`arr[0]`) o llamadas a funciones (`fn(1)`).
+* **Extracción de Referencias:** Identifica la sección de título `Referencias` o `Bibliografía`, detecta automáticamente el estilo empleado (`[N] ...` para IEEE, `N. ...` para Vancouver o formato autor-año para APA 7) y parsea cada entrada bibliográfica.
 * **Validación Cruzada:**
   - Si hay citas en el texto sin sección de Referencias $\rightarrow$ `[error]`.
-  - Si una cita no encuentra su correspondiente autor y año en la lista final $\rightarrow$ `[error]`.
+  - Si una cita (autor-año o índice numérico) no encuentra su entrada correspondiente en la lista final $\rightarrow$ `[error]`.
   - Si una referencia bibliográfica no fue citada en ningún párrafo $\rightarrow$ `[aviso]`.
 
 ---
