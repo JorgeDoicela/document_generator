@@ -32,18 +32,24 @@ Antes de redactar cualquier sección de una tarea:
 
 ---
 
-## 3. Rigor Bibliográfico y Normas APA 7
+## 3. Rigor Bibliográfico, Anti-Alucinación y Normas APA 7
 
-El manejo de referencias es un pilar innegociable de la integridad académica:
+El manejo de referencias es un pilar innegociable de la integridad académica. Los modelos de IA tienden a fabricar DOIs, URLs, autores o páginas inexistentes cuando redactan de memoria; por ello, rige el siguiente **Protocolo Obligatorio Anti-Alucinación Bibliográfica**:
 
-1. **Cero Citas Fantasma:** Toda cita en el texto debe contar con su correspondiente entrada bibliográfica completa y verificable.
-2. **Uso del Gestor Bibliográfico:** En scripts de generación (`generar_documento.py`), registrar cada fuente mediante `bib.agregar(...)` y citar estrictamente con `bib.cita("clave")` o `bib.cita_narrativa("clave")` (en `apa7` por defecto, o `estilo="ieee"` / `estilo="vancouver"` cuando la asignatura lo requiera). En documentos declarativos (`documento.md`), declarar las fuentes en `referencias:` y citar con `[@clave]` o `@clave`.
-3. **Estructura Estricta APA 7 (y Soporte Multi-Estilo):**
+1. **Prohibición Absoluta de Citas Fabricadas o de Memoria:** Nunca inventar DOIs, URLs, títulos, volúmenes, números de página ni años de publicación. Si una referencia no proviene del enunciado docente ni del banco pre-validado (`plantillas/fuentes_comunes.py`), **debe verificarse primero mediante búsqueda web real** antes de añadirla a `bib.agregar(...)` o `referencias:`.
+2. **Verificación Automatizada Obligatoria en Línea:** Antes de dar por terminada cualquier tarea con referencias, ejecutar `./tareas verificar-citas <tarea>` (o `./tareas comprobar <tarea> --verificar-citas` / `./tareas generar <tarea> --verificar-citas`). El verificador contrasta en tiempo real:
+   * **DOIs en Crossref API:** bloquea como `[ERROR]` cualquier DOI inexistente (HTTP 404) o **DOI reciclado** que pertenezca a una obra distinta a la citada.
+   * **URLs reales vía HTTP:** bloquea como `[ERROR]` enlaces rotos (404/410) o dominios inexistentes.
+   * **Obras sin DOI/URL en OpenAlex y OpenLibrary:** contrasta título, autor y año; marca `[AVISO]` si no hay coincidencia concluyente para exigir revisión manual.
+3. **Tolerancia Cero ante Errores Bibliográficos:** Cualquier referencia marcada como `[ERROR]` (`doi_inexistente`, `doi_no_coincide`, `url_rota`, `dominio_inexistente`) debe corregirse o reemplazarse por una fuente real verificada. Jamás inventar un DOI o URL para "completar" una entrada física o un libro clásico sin DOI.
+4. **Cero Citas Fantasma:** Toda cita en el texto debe contar con su correspondiente entrada bibliográfica completa y verificable.
+5. **Uso del Gestor Bibliográfico:** En scripts de generación (`generar_documento.py`), registrar cada fuente mediante `bib.agregar(...)` y citar estrictamente con `bib.cita("clave")` o `bib.cita_narrativa("clave")` (en `apa7` por defecto, o `estilo="ieee"` / `estilo="vancouver"` cuando la asignatura lo requiera). En documentos declarativos (`documento.md`), declarar las fuentes en `referencias:` y citar con `[@clave]` o `@clave`.
+6. **Estructura Estricta APA 7 (y Soporte Multi-Estilo):**
    * **Libro:** Autor, A. A. (Año). *Título de la obra*. Editorial.
    * **Artículo:** Autor, A. A., & Autor, B. B. (Año). Título del artículo. *Nombre de la Revista*, volumen(número), páginas. https://doi.org/xxxx
    * **Norma/Estándar:** Organización. (Año). *Título del estándar* (Norma No. XXX). Enlace o editorial.
    * Para revisar todas las variantes de formato disponibles (tablas `apa`/`grid`, código `light`/`dark`, citas y temas), consultar `./tareas estilos [--catalogo]`.
-4. **Integración Fluida:** Las citas deben integrarse orgánicamente en el discurso mediante citas parentéticas o narrativas, evitando acumular citas al final de párrafos sin desarrollo reflexivo propio.
+7. **Integración Fluida:** Las citas deben integrarse orgánicamente en el discurso mediante citas parentéticas o narrativas, evitando acumular citas al final de párrafos sin desarrollo reflexivo propio.
 
 ---
 

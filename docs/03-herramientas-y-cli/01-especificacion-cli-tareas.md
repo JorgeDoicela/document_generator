@@ -5,7 +5,7 @@ El punto de entrada unificado de la herramienta es el despachador de línea de c
 ### Arquitectura Interna del CLI
 La lógica interna del CLI se encuentra desacoplada en controladores de dominio bajo `plantillas/cli/`:
 * `plantillas/cli/comandos_gestion.py`: Subcomandos administrativos (`verificar`, `materia`, `tarea`, `marcar`).
-* `plantillas/cli/comandos_documentales.py`: Subcomandos de compilación e inspección (`rubrica`, `esqueleto`, `generar`, `compilar`, `comprobar`, `auditar`).
+* `plantillas/cli/comandos_documentales.py`: Subcomandos de compilación e inspección (`rubrica`, `esqueleto`, `generar`, `compilar`, `comprobar`, `verificar-citas`, `auditar`).
 * `plantillas/cli/comandos_temas.py`: Subcomandos de identidad visual y catálogo de estilos (`temas`, `estilos`).
 * `plantillas/cli/servicio_pdf.py`: Servicio aislado de conversión a PDF con LibreOffice headless y gestión de timeouts/cuotas de disco.
 * `plantillas/cli/tablas.py`: Renderizado y formateo de la tabla de avance (`estado`).
@@ -232,5 +232,25 @@ Lista en consola todos los estilos seleccionables por tipo de elemento (tablas, 
   - `--tema TEMA`: Tema base aplicado al documento catálogo (`apa7` por defecto).
   - `--salida` / `-o`: Ruta personalizada del `.docx` de salida.
   - `--sin-pdf`: Omite la exportación a PDF con LibreOffice.
+
+---
+
+### 15. `verificar-citas`
+
+Audita en línea la autenticidad y existencia real de las referencias bibliográficas extraídas de un `.docx` o de una carpeta de tarea, previniendo citas alucinadas por modelos de IA. También puede activarse directamente con `--verificar-citas` en `generar`, `compilar` y `comprobar`.
+
+* **Sintaxis:**
+  ```bash
+  tareas verificar-citas <archivo.docx | carpeta_tarea> [--estricto]
+  tareas comprobar <carpeta_tarea> --verificar-citas
+  tareas generar <carpeta_tarea> --verificar-citas
+  ```
+* **Comprobaciones:**
+  - **DOIs (Crossref API):** Detecta DOIs inexistentes (HTTP 404) y DOIs reciclados que corresponden a otra obra distinta (`[ERROR]`).
+  - **URLs (HTTP):** Detecta enlaces rotos (`404`/`410`) y dominios inexistentes (`[ERROR]`); bloqueos anti-bot (`403`/`429`) se reportan como `[AVISO]` para revisión manual.
+  - **Obras sin DOI/URL (OpenAlex y OpenLibrary):** Contrasta título, autor y año; si no existe coincidencia automática concluyente, emite `[AVISO]`.
+* **Opciones:**
+  - `--estricto`: Devuelve código de salida `1` también ante `[AVISO]` (además de `[ERROR]`).
+
 
 

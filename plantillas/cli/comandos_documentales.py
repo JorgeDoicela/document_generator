@@ -13,7 +13,7 @@ if _PLANTILLAS_DIR not in sys.path:
 if __package__ and "." in __package__:
     from .. import comprobar as comp
     from .. import esqueleto as esq
-    from .. import ficha, markdown_docx, plataforma
+    from .. import ficha, markdown_docx, plataforma, verificador_citas
     from .. import rubrica as rub
 else:
     import comprobar as comp  # type: ignore[no-redef]
@@ -22,6 +22,7 @@ else:
     import markdown_docx  # type: ignore[no-redef]
     import plataforma  # type: ignore[no-redef]
     import rubrica as rub  # type: ignore[no-redef]
+    import verificador_citas  # type: ignore[no-redef]
 
 
 
@@ -138,11 +139,17 @@ def cmd_generar(
     if inf.coberturas:
         comp.actualizar_tarea(carpeta, inf)
     comp.imprimir(inf, carpeta)
+    citas_ok = True
+    if getattr(args, "verificar_citas", False) and inf.docx:
+        print()
+        inf_citas = verificador_citas.verificar_docx(inf.docx)
+        verificador_citas.imprimir_informe(inf_citas, origen=ruta_relativa_fn(inf.docx))
+        citas_ok = inf_citas.ok()
     fallo_pdf = False
     if not getattr(args, "sin_pdf", False) and inf.docx:
         print()
         fallo_pdf = convertir_pdf_fn([inf.docx], raiz) > 0
-    sys.exit(0 if inf.ok and not fallo_pdf else 1)
+    sys.exit(0 if inf.ok and citas_ok and not fallo_pdf else 1)
 
 
 def cmd_compilar(
@@ -174,6 +181,12 @@ def cmd_compilar(
         comp.imprimir(inf, origen.parent)
         ok = inf.ok
 
+    if getattr(args, "verificar_citas", False):
+        print()
+        inf_citas = verificador_citas.verificar_docx(docx_generado)
+        verificador_citas.imprimir_informe(inf_citas, origen=ruta_relativa_fn(docx_generado))
+        ok = ok and inf_citas.ok()
+
     fallo_pdf = False
     if not getattr(args, "sin_pdf", False):
         print()
@@ -188,6 +201,7 @@ def cmd_comprobar(
     args,
     carpeta_tarea_fn: Callable[[str], Path],
     materias_dir: Path,
+    ruta_relativa_fn: Optional[Callable[[Path], str]] = None,
 ) -> None:
     """Verifica el archivo Word generado frente a la rúbrica."""
     if getattr(args, "todas", False) or getattr(args, "tarea", None) in ("todas", "todo", "--todas"):
@@ -200,7 +214,35 @@ def cmd_comprobar(
     comp.imprimir(inf, carpeta)
     if getattr(args, "actualizar", False) and inf.coberturas:
         print("  TAREA.md: columna «Dónde se cumple» actualizada.")
-    sys.exit(0 if inf.ok else 1)
+    citas_ok = True
+    if getattr(args, "verificar_citas", False) and inf.docx:
+        print()
+        inf_citas = verificador_citas.verificar_docx(inf.docx)
+        origen_lbl = ruta_relativa_fn(inf.docx) if ruta_relativa_fn else str(inf.docx)
+        verificador_citas.imprimir_informe(inf_citas, origen=origen_lbl)
+        citas_ok = inf_citas.ok()
+    sys.exit(0 if inf.ok and citas_ok else 1)
+
+
+def cmd_verificar_citas(
+    args,
+    carpeta_tarea_fn: Callable[[str], Path],
+    ruta_relativa_fn: Callable[[Path], str],
+) -> None:
+    """Verifica la existencia real de las referencias bibliográficas de un .docx o carpeta de tarea."""
+    ruta_raw = Path(args.objetivo)
+    if ruta_raw.is_file() and ruta_raw.suffix.lower() == ".docx":
+        docx_path = ruta_raw.resolve()
+    else:
+        carpeta = carpeta_tarea_fn(args.objetivo)
+        encontrado = comp.buscar_docx(carpeta)
+        if not encontrado:
+            sys.exit(f"No hay ningún .docx en {ruta_relativa_fn(carpeta)}")
+        docx_path = encontrado
+
+    informe = verificador_citas.verificar_docx(docx_path)
+    verificador_citas.imprimir_informe(informe, origen=ruta_relativa_fn(docx_path))
+    sys.exit(0 if informe.ok(estricto=getattr(args, "estricto", False)) else 1)
 
 
 def cmd_auditar(args, materias_dir: Path) -> None:

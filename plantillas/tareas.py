@@ -9,7 +9,8 @@ Uso (desde la raíz del repositorio):
     python plantillas/tareas.py esqueleto <tarea> [--palabras N] [--forzar]
     python plantillas/tareas.py generar <tarea> [--desde-md] [--sin-pdf]
     python plantillas/tareas.py compilar <archivo.md> [--salida DOCX] [--tema TEMA] [--citas ESTILO] [--sin-pdf]
-    python plantillas/tareas.py comprobar <tarea> [--actualizar]
+    python plantillas/tareas.py comprobar <tarea> [--actualizar] [--verificar-citas]
+    python plantillas/tareas.py verificar-citas <archivo.docx | tarea> [--estricto]
     python plantillas/tareas.py auditar [<materia>] [--actualizar]
     python plantillas/tareas.py pdf <archivo.docx | carpeta>
     python plantillas/tareas.py estado [<materia>]
@@ -152,7 +153,11 @@ def cmd_compilar(args) -> None:
 
 
 def cmd_comprobar(args) -> None:
-    doc_cmds.cmd_comprobar(args, carpeta_tarea, MATERIAS)
+    doc_cmds.cmd_comprobar(args, carpeta_tarea, MATERIAS, ruta_relativa)
+
+
+def cmd_verificar_citas(args) -> None:
+    doc_cmds.cmd_verificar_citas(args, carpeta_tarea, ruta_relativa)
 
 
 def cmd_auditar(args) -> None:
@@ -220,6 +225,7 @@ def main() -> None:
     p.add_argument("--desde-md", action="store_true", help="compila documento.md en lugar de ejecutar generar_documento.py")
     p.add_argument("--tema", default=None, help="sobrescribe el tema al compilar desde documento.md")
     p.add_argument("--citas", choices=["apa7", "ieee", "vancouver"], default=None, help="estilo de citación al compilar desde documento.md")
+    p.add_argument("--verificar-citas", action="store_true", help="verifica en línea (Crossref/OpenAlex/OpenLibrary/HTTP) que las referencias existan")
     p.add_argument("--sin-pdf", action="store_true", help="no convierte a PDF")
 
     p = sub.add_parser("compilar", help="compila un archivo Markdown/YAML declarativo a .docx y .pdf")
@@ -227,6 +233,7 @@ def main() -> None:
     p.add_argument("--salida", "-o", default=None, help="ruta de salida del archivo .docx")
     p.add_argument("--tema", default=None, help="sobrescribe el tema declarado en el frontmatter")
     p.add_argument("--citas", choices=["apa7", "ieee", "vancouver"], default=None, help="sobrescribe el estilo de citación (apa7, ieee, vancouver)")
+    p.add_argument("--verificar-citas", action="store_true", help="verifica en línea que DOIs, URLs y obras citadas sean reales")
     p.add_argument("--sin-pdf", action="store_true", help="genera únicamente el .docx sin convertir a PDF")
 
     p = sub.add_parser("comprobar", help="verifica el .docx contra la rúbrica")
@@ -235,6 +242,12 @@ def main() -> None:
     p.add_argument("--docx", help="documento a comprobar (por defecto, el más reciente)")
     p.add_argument("--actualizar", action="store_true",
                    help="rellena «Dónde se cumple» en TAREA.md")
+    p.add_argument("--verificar-citas", action="store_true",
+                   help="verifica en línea que DOIs, URLs y obras citadas existan realmente")
+
+    p = sub.add_parser("verificar-citas", help="verifica en línea la autenticidad de las referencias de un .docx o tarea")
+    p.add_argument("objetivo", help="ruta a un archivo .docx o carpeta de tarea")
+    p.add_argument("--estricto", action="store_true", help="falla también si alguna referencia queda sin verificación automática")
 
     p = sub.add_parser("auditar", help="auditoría estática global de todas las tareas del repositorio")
     p.add_argument("materia", nargs="?", help="limita la auditoría solo a esta materia")
@@ -281,6 +294,7 @@ def main() -> None:
         "generar": cmd_generar,
         "compilar": cmd_compilar,
         "comprobar": cmd_comprobar,
+        "verificar-citas": cmd_verificar_citas,
         "auditar": cmd_auditar,
         "pdf": cmd_pdf,
         "estado": cmd_estado,

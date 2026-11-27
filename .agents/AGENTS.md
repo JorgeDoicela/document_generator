@@ -77,10 +77,14 @@ Cuando el usuario pida "haz la tarea materias/<materia>/<carpeta>" (o similar):
    Citar con `bib.cita("clave")` / `bib.cita_narrativa("clave")` tras
    `bib.agregar(...)` (`apa7`, `ieee` o `vancouver`); nunca escribir citas a mano sin su referencia.
    (Alternativamente, si la tarea usa flujo declarativo `documento.md`, conservar `# Título {#C1}` y `transversales: [...]` y compilar con `tareas generar <tarea> --desde-md` o `tareas compilar <archivo.md>`).
-7. `tareas generar <tarea>`: genera el `.docx`, lo comprueba contra la rúbrica,
+7. `tareas generar <tarea> --verificar-citas`: genera el `.docx`, lo comprueba contra la rúbrica,
+   verifica en línea que DOIs, URLs y obras citadas existan realmente (Crossref/OpenAlex/OpenLibrary/HTTP),
    rellena "Dónde se cumple" en `TAREA.md` y genera el PDF. **Corregir todos
-   los `[error]`** y revisar los `[aviso]` (secciones poco desarrolladas según
-   su peso, extensión, referencias sin citar). Si algún criterio no se puede
+   los `[error]`** (incluidos DOIs inexistentes, DOIs reciclados de otra obra o enlaces 404)
+   y revisar los `[aviso]` (secciones poco desarrolladas según su peso, extensión, referencias sin citar
+   o referencias sin coincidencia automática). También puede ejecutarse por separado con
+   `tareas verificar-citas <tarea>` o `tareas comprobar <tarea> --verificar-citas`.
+   Nunca inventar DOIs, URLs ni metadatos bibliográficos desde memoria. Si algún criterio no se puede
    cubrir (p. ej. faltan capturas que solo el usuario puede hacer), decírselo
    al usuario; no rellenarlo con contenido inventado.
    Para consultar todas las variantes editoriales disponibles (tablas `apa`/`grid`, terminales/código `light`/`dark`, citas y temas), ejecutar `./tareas estilos [--catalogo]`.

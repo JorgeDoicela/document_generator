@@ -90,6 +90,7 @@ El software está desacoplado en componentes con responsabilidades bien delimita
 | `rubrica.py` | Extracción de rúbricas desde DOCX, normalización y cálculo de pesos. | `leer()`, `importar_docx()`, `escribir()` |
 | `esqueleto.py` | Generación de plantillas de código ponderadas según rúbrica. | `generar_esqueleto()` |
 | `comprobar.py` | Motor de auditoría estática sobre WordML y agregación global. | `analizar()`, `comprobar()`, `auditar_todo()` |
+| `verificador_citas.py` | Verificación real en línea de DOIs (Crossref), URLs (HTTP) y metadatos (OpenAlex/OpenLibrary). | `verificar_docx()`, `verificar_referencias()`, `imprimir_informe()` |
 | `ficha.py` | Parseo bidireccional y actualización de `TAREA.md` y `MATERIA.md`. | `leer_tarea()`, `actualizar_tarea()` |
 | `config.py` | Lectura segura, tipado y validación de variables en `.env`. | `cargar()`, `cargar_o_salir()` |
 | `fuentes_comunes.py` | Catálogo canónico de fuentes pre-validadas en APA 7. | `FUENTES_CARRERA`, `cargar_en_bibliografia()` |

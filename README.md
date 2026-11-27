@@ -120,8 +120,9 @@ El comando `--extraer` analiza el OpenXML del documento de referencia y genera `
 | `./tareas tarea <materia> <código> "<Título>" [--grupal] [--formato TEMA]` | Inicializa una tarea con su estructura (`TAREA.md`, `enunciado/`, `capturas/`). |
 | `./tareas rubrica <tarea> [--importar docx]` | Visualiza o importa la rúbrica oficial en `TAREA.md`. |
 | `./tareas esqueleto <tarea> [--palabras N]` | Genera secciones ponderadas por criterio en `generar_documento.py`. |
-| `./tareas generar <tarea> [--desde-md] [--sin-pdf]` | Compila `generar_documento.py` (o `documento.md`), ejecuta auditoría estática y exporta a `.pdf`. |
-| `./tareas comprobar <tarea> [--actualizar]` | Audita el `.docx` contra la rúbrica y estándares OpenXML. |
+| `./tareas generar <tarea> [--desde-md] [--verificar-citas] [--sin-pdf]` | Compila `generar_documento.py` (o `documento.md`), ejecuta auditoría estática (y opcionalmente verificación real de citas) y exporta a `.pdf`. |
+| `./tareas comprobar <tarea> [--actualizar] [--verificar-citas]` | Audita el `.docx` contra la rúbrica, estándares OpenXML y (opcionalmente) existencia real de DOIs/URLs/obras. |
+| `./tareas verificar-citas <archivo.docx \| tarea> [--estricto]` | Verifica en línea contra Crossref, OpenAlex, OpenLibrary y HTTP que todas las referencias existan y coincidan con lo citado. |
 | `./tareas auditar [<materia>]` | Auditoría estática global de todas las tareas locales. |
 | `./tareas pdf <archivo.docx \| carpeta>` | Convierte archivos `.docx` a `.pdf` mediante LibreOffice aislado. |
 | `./tareas estado [<materia>]` | Muestra tabla de avance y cobertura de rúbrica. |
@@ -145,6 +146,7 @@ document_generator/
 │   ├── preview_tema.py          # Generador de vistas previas visuales para presets y temas JSON
 │   ├── visual.py                # Terminales 300 DPI, código WordML y tablas fijas
 │   ├── rubrica.py / esqueleto.py / comprobar.py / ficha.py
+│   ├── verificador_citas.py     # Auditoría real de referencias (Crossref, OpenAlex, OpenLibrary, HTTP)
 │   └── plataforma.py            # Abstracción multiplataforma (Linux, macOS, Windows)
 ├── examples/                    # Ejemplos completos reproducibles y verificados en CI
 ├── materias/                    # Workspace privado del usuario (solo .gitkeep en Git)
