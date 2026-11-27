@@ -308,6 +308,67 @@ class TestPreviewTema(unittest.TestCase):
         ):
             self.assertTrue((RAIZ / rel).is_file(), f"Falta {rel}")
 
+    def test_apa7_perfeccionado_docdefaults_5_niveles_cita_bloque_y_apendice(self) -> None:
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+        with tempfile.TemporaryDirectory() as tmp:
+            salida = Path(tmp) / "apa7_completo.docx"
+            doc, _, _ = apa_docx.nuevo_documento(
+                titulo="Validación APA 7 Completa",
+                materia="Metodología",
+                salida=salida,
+                institucion="Universidad",
+                carrera="Ingeniería",
+                nombre="Tester",
+                formato="apa7",
+            )
+            p4 = apa_docx.titulo(doc, "Subsección de cuarto nivel", 4)
+            p5 = apa_docx.titulo(doc, "Detalle de quinto nivel", 5)
+            p_cb = apa_docx.cita_bloque(
+                doc,
+                "Primer párrafo de una cita textual extensa de más de cuarenta palabras.\n"
+                "Segundo párrafo con sangría adicional de primera línea conforme a APA 7",
+                cita="(Russell y Norvig, 2021, p. 42)",
+            )
+            p_vin = apa_docx.vinieta(doc, "Elemento de lista sin estiramiento de espacios.")
+            p_ap = apa_docx.apendice(doc, "Instrumento de Recolección de Datos", letra="A")
+            apa_docx.guardar_documento(doc, salida)
+
+            self.assertEqual(p4.style.name, "Heading 4")
+            self.assertTrue(p4.text.endswith("."))
+            self.assertAlmostEqual(doc.styles["Heading 4"].paragraph_format.first_line_indent.inches, 0.5, places=2)
+            self.assertTrue(doc.styles["Heading 4"].font.bold)
+            self.assertFalse(doc.styles["Heading 4"].font.italic)
+
+            self.assertEqual(p5.style.name, "Heading 5")
+            self.assertTrue(p5.text.endswith("."))
+            self.assertAlmostEqual(doc.styles["Heading 5"].paragraph_format.first_line_indent.inches, 0.5, places=2)
+            self.assertTrue(doc.styles["Heading 5"].font.bold)
+            self.assertTrue(doc.styles["Heading 5"].font.italic)
+
+            self.assertAlmostEqual(p_cb.paragraph_format.left_indent.inches, 0.5, places=2)
+            self.assertAlmostEqual(p_cb.paragraph_format.first_line_indent.inches, 0.5, places=2)
+            self.assertTrue(p_cb.text.endswith(". (Russell y Norvig, 2021, p. 42)"))
+
+            self.assertEqual(p_vin.alignment, WD_ALIGN_PARAGRAPH.LEFT)
+            self.assertEqual(p_ap.text, "Apéndice A")
+            self.assertEqual(p_ap.style.name, "Heading 1")
+
+            styles_xml = doc.styles.element.xml
+            self.assertIn("docDefaults", styles_xml)
+            self.assertIn('w:ascii="Times New Roman"', styles_xml)
+            self.assertIn('w:val="24"', styles_xml)
+
+
+    def test_apa7_orden_alfabetico_con_tildes(self) -> None:
+        bib = apa_docx.Bibliografia(estilo="apa7")
+        bib.agregar("zapata2022", ["Zapata, M."], 2022, "Obra Z", "Ed")
+        bib.agregar("alvarez2024", ["Álvarez, C."], 2024, "Obra A", "Ed")
+        bib.agregar("benitez2023", ["Benítez, L."], 2023, "Obra B", "Ed")
+        cita_mult = bib.cita("zapata2022", "alvarez2024", "benitez2023")
+        self.assertEqual(cita_mult, "(Álvarez, 2024; Benítez, 2023; Zapata, 2022)")
+        self.assertEqual(bib.ordenadas(), ["alvarez2024", "benitez2023", "zapata2022"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -569,27 +569,38 @@ def tabla_estilizada(
     estilo_activo = resolver_estilo_tabla(estilo, defecto=EstilosTabla.APA)
 
     # Rótulo y Título formal APA 7 (si se suministran)
+    es_apa_tnr = estilo_activo == EstilosTabla.APA and fuente.lower() == "times new roman"
+    tam_rotulo = 12.0 if es_apa_tnr else 10.5
+    col_rotulo = RGBColor(0, 0, 0) if es_apa_tnr else RGBColor(20, 20, 20)
+    col_titulo = RGBColor(0, 0, 0) if es_apa_tnr else RGBColor(40, 40, 40)
+
     if numero_tabla is not None:
         p_num = doc.add_paragraph()
+        p_num.alignment = WD_ALIGN_PARAGRAPH.LEFT
         p_num.paragraph_format.space_before = Pt(12)
-        p_num.paragraph_format.space_after = Pt(2)
+        p_num.paragraph_format.space_after = Pt(0 if es_apa_tnr else 2)
+        p_num.paragraph_format.line_spacing = 2.0 if es_apa_tnr else 1.15
         p_num.paragraph_format.keep_with_next = True
+        p_num.paragraph_format.widow_control = True
         r_num = p_num.add_run(f"Tabla {numero_tabla}")
         r_num.font.name = fuente
-        r_num.font.size = Pt(10.5)
+        r_num.font.size = Pt(tam_rotulo)
         r_num.bold = True
-        r_num.font.color.rgb = RGBColor(20, 20, 20)
+        r_num.font.color.rgb = col_rotulo
 
     if titulo_tabla:
         p_tit = doc.add_paragraph()
+        p_tit.alignment = WD_ALIGN_PARAGRAPH.LEFT
         p_tit.paragraph_format.space_before = Pt(0)
         p_tit.paragraph_format.space_after = Pt(6)
+        p_tit.paragraph_format.line_spacing = 2.0 if es_apa_tnr else 1.15
         p_tit.paragraph_format.keep_with_next = True
+        p_tit.paragraph_format.widow_control = True
         r_tit = p_tit.add_run(titulo_tabla)
         r_tit.font.name = fuente
-        r_tit.font.size = Pt(10.5)
+        r_tit.font.size = Pt(tam_rotulo)
         r_tit.italic = True
-        r_tit.font.color.rgb = RGBColor(40, 40, 40)
+        r_tit.font.color.rgb = col_titulo
 
     # Resolver anchos efectivos (explícitos o calculados proporcionalmente al contenido)
     anchos_efectivos = list(anchos) if anchos is not None else _calcular_anchos_proporcionales(encabezados, filas)

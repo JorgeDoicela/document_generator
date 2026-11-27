@@ -36,7 +36,7 @@ else:
     from . import temas as temas_mod
 
 _TITULOS_REF = {"referencias", "referencias bibliograficas", "bibliografia", "references"}
-_RE_HEADING = re.compile(r"^(#{1,3})\s+(.+?)\s*$")
+_RE_HEADING = re.compile(r"^(#{1,5})\s+(.+?)\s*$")
 _RE_ATTRS = re.compile(r"\s*\{([^}]+)\}\s*$")
 _RE_IMAGEN = re.compile(r'^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)\s*$')
 _RE_CITA_BRACKET = re.compile(r"\[(@!?[A-Za-z_][\w-]*(?:[^]]*))\]")

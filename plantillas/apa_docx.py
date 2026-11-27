@@ -43,6 +43,7 @@ import datetime
 import os
 import re
 import sys
+import unicodedata
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -82,7 +83,8 @@ SUFIJO_ARCHIVOS: str = ""
 __all__ = [
     "Bibliografia", "NEGRO", "WD_ALIGN_PARAGRAPH",
     "NOMBRE_ESTUDIANTE", "INSTITUCION", "CARRERA", "SUFIJO_ARCHIVOS",
-    "aplicar_metadatos", "caja_captura_evidencia", "codigo", "codigo_bloque",
+    "apendice", "aplicar_metadatos", "caja_captura_evidencia", "cita_bloque",
+    "codigo", "codigo_bloque",
     "convertir_a_grises", "dividir_formula_larga", "enunciado_formal",
     "fecha_hoy", "fecha_portada", "formula_bloque", "guardar_documento",
     "insertar_indice_automatico", "leer_fuente", "nombre_entregable",
@@ -209,8 +211,34 @@ def _tema_activo(doc):
     return None
 
 
+def _configurar_doc_defaults(doc, f_nombre: str, tam_cuerpo: float) -> None:
+    """Fija w:docDefaults (rFonts, sz y lang) para evitar herencia residual de Calibri en Word/LibreOffice."""
+    styles_el = doc.styles.element
+    doc_defaults = styles_el.find(qn("w:docDefaults"))
+    if doc_defaults is None:
+        doc_defaults = OxmlElement("w:docDefaults")
+        styles_el.insert(0, doc_defaults)
+    rpr_def = doc_defaults.find(qn("w:rPrDefault"))
+    if rpr_def is None:
+        rpr_def = OxmlElement("w:rPrDefault")
+        doc_defaults.insert(0, rpr_def)
+    rpr = rpr_def.find(qn("w:rPr"))
+    if rpr is None:
+        rpr = OxmlElement("w:rPr")
+        rpr_def.append(rpr)
+    _fuente_fija(rpr, f_nombre)
+    half_pts = str(int(round(tam_cuerpo * 2)))
+    for tag in ("w:sz", "w:szCs"):
+        for viejo in rpr.findall(qn(tag)):
+            rpr.remove(viejo)
+        el = OxmlElement(tag)
+        el.set(qn("w:val"), half_pts)
+        rpr.append(el)
+    _idioma(rpr)
+
+
 def _estilos(doc, tema=None):
-    """Normal, encabezados 1-3 y viñetas. Soporta APA 7 estándar y cualquier TemaDocumental."""
+    """Normal, docDefaults, encabezados APA 7 niveles 1-5 y viñetas. Soporta APA 7 y cualquier TemaDocumental."""
     if tema is not None:
         f_nombre = tema.fuente
         tam_cuerpo = tema.tamano_cuerpo
@@ -219,7 +247,13 @@ def _estilos(doc, tema=None):
         color_h1 = tema.rgb_primario()
         color_txt = tema.rgb_texto()
         h1_centrado = tema.h1_centrado
-        tams_h = {1: tema.tamano_h1, 2: tema.tamano_h2, 3: tema.tamano_h3}
+        tams_h = {
+            1: tema.tamano_h1,
+            2: tema.tamano_h2,
+            3: tema.tamano_h3,
+            4: tema.tamano_cuerpo,
+            5: tema.tamano_cuerpo,
+        }
     else:
         f_nombre = FUENTE
         tam_cuerpo = 12.0
@@ -228,7 +262,9 @@ def _estilos(doc, tema=None):
         color_h1 = NEGRO
         color_txt = NEGRO
         h1_centrado = True
-        tams_h = {1: 12.0, 2: 12.0, 3: 12.0}
+        tams_h = {1: 12.0, 2: 12.0, 3: 12.0, 4: 12.0, 5: 12.0}
+
+    _configurar_doc_defaults(doc, f_nombre, tam_cuerpo)
 
     normal = doc.styles["Normal"]
     normal.font.name = f_nombre
@@ -241,12 +277,12 @@ def _estilos(doc, tema=None):
     normal.paragraph_format.space_after = Pt(espacio_despues)
     normal.paragraph_format.widow_control = True
 
-    for nivel in (1, 2, 3):
+    for nivel in (1, 2, 3, 4, 5):
         est = doc.styles[f"Heading {nivel}"]
         est.font.name = f_nombre
         est.font.size = Pt(tams_h[nivel])
         est.font.bold = True
-        est.font.italic = (nivel == 3)
+        est.font.italic = nivel in (3, 5)
         est.font.color.rgb = color_h1 if nivel == 1 else color_txt
         _fuente_fija(est.element.get_or_add_rPr(), f_nombre)
         pf = est.paragraph_format
@@ -256,7 +292,7 @@ def _estilos(doc, tema=None):
         pf.space_after = Pt(4 if tema is not None else 0)
         pf.keep_with_next = True
         pf.widow_control = True
-        pf.first_line_indent = Inches(0)
+        pf.first_line_indent = Inches(0.5) if nivel in (4, 5) else Inches(0)
 
     viñetas = doc.styles["List Bullet"]
     viñetas.font.name = f_nombre
@@ -264,6 +300,8 @@ def _estilos(doc, tema=None):
     viñetas.font.color.rgb = color_txt
     _fuente_fija(viñetas.element.get_or_add_rPr(), f_nombre)
     viñetas.paragraph_format.line_spacing = interlineado
+    viñetas.paragraph_format.space_before = Pt(0)
+    viñetas.paragraph_format.space_after = Pt(espacio_despues)
     viñetas.paragraph_format.widow_control = True
 
 
@@ -415,25 +453,81 @@ def parrafo(doc, texto="", *, alineacion=WD_ALIGN_PARAGRAPH.JUSTIFY,
 
 
 def titulo(doc, texto, nivel=1, criterios=None):
-    """Encabezado APA 7 con estilo de Word 'Heading N'.
+    """Encabezado APA 7 (niveles 1 a 5) con estilo de Word 'Heading N'.
 
     nivel 1: centrado y negrita (secciones principales).
     nivel 2: alineado a la izquierda, negrita.
     nivel 3: alineado a la izquierda, negrita y cursiva.
+    nivel 4: sangría 0.5", negrita, terminado en punto.
+    nivel 5: sangría 0.5", negrita y cursiva, terminado en punto.
 
     criterios: IDs de la rúbrica que cubre esta sección ("C1" o ["C1", "C2"]).
     Se guardan como marcadores invisibles en el .docx y los usa
     `tareas.py comprobar` para verificar la cobertura.
     """
-    nivel = min(max(int(nivel), 1), 3)
+    nivel = min(max(int(nivel), 1), 5)
     # Limpia asteriscos de markdown para encabezados en el DOM y bookmarks
     texto_limpio = re.sub(r"\*\*\*([^*]+?)\*\*\*", r"\1", str(texto))
     texto_limpio = re.sub(r"\*\*([^*]+?)\*\*", r"\1", texto_limpio)
-    texto_limpio = re.sub(r"\*([^*]+?)\*", r"\1", texto_limpio)
+    texto_limpio = re.sub(r"\*([^*]+?)\*", r"\1", texto_limpio).strip()
+    if nivel in (4, 5) and texto_limpio and not texto_limpio.endswith((".", "?", "!", ":")):
+        texto_limpio += "."
     p = doc.add_paragraph(texto_limpio, style=f"Heading {nivel}")
     for ident in _ids_criterios(criterios):
         _marcar(p, PREFIJO_MARCA + ident)
     return p
+
+
+def cita_bloque(doc, texto: str, cita: str = ""):
+    """Cita textual larga en bloque según APA 7 (Sec. 8.27, >= 40 palabras).
+
+    Aplica sangría izquierda uniforme de 0.5" (1.27 cm) sin comillas envolventes,
+    interlineado doble, alineación izquierda y sangría de primera línea adicional
+    de 0.5" únicamente en párrafos subsiguientes. Si se pasa `cita` (p. ej.
+    `bib.cita("autor2024", "p. 15")`), se ubica al final tras el punto final.
+    """
+    tema = _tema_activo(doc)
+    f_nombre = tema.fuente if tema is not None else FUENTE
+    tam = tema.tamano_cuerpo if tema is not None else 12
+    color_txt = tema.rgb_texto() if tema is not None else NEGRO
+    esp = tema.interlineado if tema is not None else 2.0
+    despues = tema.espacio_despues if tema is not None else 0
+
+    bloques_p = [ln.strip() for ln in str(texto).strip().split("\n") if ln.strip()]
+    if not bloques_p:
+        return doc.add_paragraph()
+
+    if cita:
+        ultimo = bloques_p[-1]
+        if not ultimo.endswith((".", "?", "!")):
+            ultimo += "."
+        bloques_p[-1] = f"{ultimo} {cita.strip()}"
+
+    ultimo_p = None
+    for idx, parr in enumerate(bloques_p):
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        pf = p.paragraph_format
+        pf.line_spacing = esp
+        pf.space_before = Pt(0)
+        pf.space_after = Pt(despues)
+        pf.left_indent = Inches(0.5)
+        pf.first_line_indent = Inches(0.5) if idx > 0 else Inches(0)
+        pf.widow_control = True
+        _agregar_texto_enriquecido(p, parr, f_nombre=f_nombre, tamano=tam, color=color_txt)
+        ultimo_p = p
+    return ultimo_p
+
+
+def apendice(doc, titulo_apendice: str = "", *, letra: Optional[str] = None, criterios=None, nueva_pagina: bool = True):
+    """Inserta una sección Apéndice conforme a APA 7 (Sec. 2.14) en página nueva."""
+    if nueva_pagina:
+        salto_de_pagina(doc)
+    etiqueta = f"Apéndice {str(letra).strip().upper()}" if letra else "Apéndice"
+    p_h = titulo(doc, etiqueta, nivel=1, criterios=criterios)
+    if titulo_apendice:
+        parrafo(doc, titulo_apendice.strip(), alineacion=WD_ALIGN_PARAGRAPH.CENTER, sangria=False, negrita=True)
+    return p_h
 
 
 def transversal(doc, *criterios):
@@ -449,11 +543,13 @@ def transversal(doc, *criterios):
 def vinieta(doc, texto):
     tema = _tema_activo(doc)
     p = doc.add_paragraph(style="List Bullet")
-    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
     pf = p.paragraph_format
     pf.line_spacing = tema.interlineado if tema is not None else 2.0
+    pf.space_before = Pt(0)
     pf.space_after = Pt(2 if tema is not None else 0)
     pf.left_indent = Inches(0.4 if tema is not None else 0.5)
+    pf.widow_control = True
     f_nombre = tema.fuente if tema is not None else FUENTE
     tam = tema.tamano_cuerpo if tema is not None else 12
     color_txt = tema.rgb_texto() if tema is not None else NEGRO
@@ -549,9 +645,11 @@ def _make_figura(carpeta_capturas):
                     alineacion=WD_ALIGN_PARAGRAPH.CENTER, sangria=False)
 
         p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-        p.paragraph_format.line_spacing = 1.5 if tema is None else esp
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p.paragraph_format.line_spacing = 2.0 if tema is None else esp
+        p.paragraph_format.space_before = Pt(0)
         p.paragraph_format.space_after = Pt(12)
+        p.paragraph_format.widow_control = True
         r = p.add_run("Nota. ")
         r.italic = True
         r.font.name = f_nombre
@@ -674,6 +772,15 @@ def _autor_vancouver(autor: str) -> str:
     return f"{apellido} {inics_limpias}".strip() if inics_limpias else apellido
 
 
+def _clave_alfabetica(texto: str) -> tuple[str, str]:
+    """Clave de ordenación alfabética APA 7 insensible a tildes y mayúsculas ('Álvarez' < 'Benítez' < 'Zapata')."""
+    limpio = str(texto).lstrip("*").strip()
+    sin_tildes = "".join(
+        ch for ch in unicodedata.normalize("NFKD", limpio) if not unicodedata.combining(ch)
+    ).lower()
+    return (sin_tildes, limpio.lower())
+
+
 def _unir(elementos, conector="y"):
     if len(elementos) == 1:
         return elementos[0]
@@ -775,7 +882,7 @@ class Bibliografia:
         for clave in lista_claves:
             f = self._fuente(clave)
             partes.append(f"{self._autores_cita(f)}, {f['anio']}")
-        partes.sort(key=str.lower)
+        partes.sort(key=_clave_alfabetica)
         texto = "; ".join(partes)
         return f"({texto}, {pagina})" if pagina else f"({texto})"
 
@@ -875,7 +982,7 @@ class Bibliografia:
 
         def orden(clave):
             f = self._fuentes[clave]
-            return ([_apellido(a).lower() for a in f["autores"]], f["anio"])
+            return ([_clave_alfabetica(_apellido(a)) for a in f["autores"]], f["anio"])
         return sorted(self._citadas, key=orden)
 
 
@@ -890,7 +997,7 @@ def referencias(doc, bib=None, *, criterios=None, nueva_pagina=True, entradas=()
     if bib and bib.es_numerico:
         lista_final = textos + textos_manuales
     else:
-        lista_final = sorted(textos + textos_manuales, key=lambda t: t.lstrip("*").lower())
+        lista_final = sorted(textos + textos_manuales, key=_clave_alfabetica)
     for texto in lista_final:
         referencia(doc, texto)
     if bib and bib.no_citadas():

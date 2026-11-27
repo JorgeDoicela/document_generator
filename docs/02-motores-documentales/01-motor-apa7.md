@@ -11,12 +11,15 @@ El documento generado mediante `nuevo_documento()` configura los parámetros del
 | Parámetro | Valor APA 7 | Implementación en `apa_docx.py` |
 |---|---|---|
 | Tamaño de Papel | US Letter (8.5" × 11") | `sec.page_width = Inches(8.5)`, `sec.page_height = Inches(11.0)` |
+| Tipografía Global (`docDefaults`) | Times New Roman 12 pt | `w:docDefaults` (`w:rFonts` en los 4 alfabetos, `w:sz=24`, `w:lang=es-ES`) |
 | Tipografía del Cuerpo | Times New Roman | `Normal.font.name = "Times New Roman"` (`w:rFonts` en los 4 alfabetos) |
 | Tamaño de Fuente | 12 pt | `Normal.font.size = Pt(12)` |
 | Color del Texto | Automático / Monocromático | `Normal.font.color.rgb = RGBColor(0, 0, 0)` |
 | Interlineado | Doble (2.0) | `Normal.paragraph_format.line_spacing = 2.0` |
 | Espaciado entre Párrafos | 0 pt antes, 0 pt después | `space_before = Pt(0)`, `space_after = Pt(0)`, `widow_control = True` |
 | Sangría de Primera Línea | 0.5 pulgadas (1.27 cm) | `first_line_indent = Inches(0.5)` |
+| Cita Larga en Bloque (≥ 40 pal.) | Sangría izquierda 0.5", doble espacio, sin comillas | `cita_bloque(doc, texto, cita=...)` |
+| Apéndices | Página nueva, Heading 1 centrado en negrita | `apendice(doc, titulo_apendice, letra="A")` |
 | Márgenes de Página | 1 pulgada (2.54 cm) en los 4 lados | `top_margin = Inches(1.0)`, `header_distance = Inches(0.5)` |
 | Numeración de Página | Esquina superior derecha continua | Campo `PAGE` en encabezado derecho en Times New Roman 12 pt (`w:fldChar`) |
 
@@ -24,13 +27,15 @@ El documento generado mediante `nuevo_documento()` configura los parámetros del
 
 ## 2. Niveles de Encabezados con Estilos Nativos de Word
 
-APA 7 define cinco niveles jerárquicos de encabezados. `plantillas.apa_docx` implementa los niveles principales utilizando estilos nativos de Word (`Heading 1`, `Heading 2`, `Heading 3`), asegurando que aparezcan en el panel de navegación de Word y en la tabla de contenidos de los PDFs exportados:
+APA 7 define cinco niveles jerárquicos de encabezados. `plantillas.apa_docx` implementa los **5 niveles completos** utilizando estilos nativos de Word (`Heading 1` a `Heading 5`), asegurando compatibilidad con el panel de navegación de Word, la tabla de contenidos y el compilador declarativo Markdown (`#` a `#####`):
 
 | Nivel APA | Formato Visual en Word | Llamada de API |
 |---|---|---|
 | **Nivel 1** | Centrado, Negrita, Caso de Título | `titulo(doc, "Marco Teórico", 1, criterios="C1")` |
 | **Nivel 2** | Alineado a la izquierda, Negrita | `titulo(doc, "Antecedentes del Problema", 2)` |
 | **Nivel 3** | Alineado a la izquierda, Negrita, Cursiva | `titulo(doc, "Revisión de Algoritmos", 3)` |
+| **Nivel 4** | Sangría 0.5", Negrita, con punto final | `titulo(doc, "Complejidad Temporal", 4)` |
+| **Nivel 5** | Sangría 0.5", Negrita, Cursiva, con punto final | `titulo(doc, "Caso Promedio", 5)` |
 
 ### Firma de la Función `titulo`:
 
