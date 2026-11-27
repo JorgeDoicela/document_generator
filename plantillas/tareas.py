@@ -245,7 +245,7 @@ def main() -> None:
     p.add_argument("--grupo", default=None, help="nombre o número del grupo (p. ej. 'Grupo 1')")
     p.add_argument("--integrantes", default=None, help="lista de integrantes separados por comas")
     p.add_argument("--estudiante", default=None, help="nombre del estudiante (para modalidad individual)")
-    p.add_argument("--formato", "--tema", dest="formato", default=None, help="preset o tema documental (apa7, academico, tecnico, ejecutivo, ieee o nombre/ruta de tema)")
+    p.add_argument("--formato", "--tema", dest="formato", default=None, help="preset oficial (apa7) o nombre/ruta de tema JSON en themes/ o themes/local/")
 
     p = sub.add_parser("rubrica", help="muestra la rúbrica de TAREA.md o la importa de un .docx")
     p.add_argument("tarea", help="carpeta de la tarea")
@@ -303,7 +303,7 @@ def main() -> None:
     p.add_argument("--citas", choices=["apa7", "ieee", "vancouver"], default=None, help="estilo de citación en la vista previa")
     p.add_argument("--sin-pdf", action="store_true", help="al usar --preview, genera solo .docx sin convertir a PDF")
     p.add_argument("--nombre", metavar="NOMBRE", default=None, help="nombre del tema al usar --extraer (por defecto el nombre del archivo)")
-    p.add_argument("--base", default="academico", help="preset base al crear un tema (defecto: academico)")
+    p.add_argument("--base", default="apa7", help="preset base al crear un tema (defecto: apa7)")
     p.add_argument("--local", action="store_true", help="crea el tema en themes/local/ (ignorado por Git)")
     p.add_argument("--compartido", action="store_true", help="al usar --extraer, guarda en themes/ en lugar de themes/local/")
 

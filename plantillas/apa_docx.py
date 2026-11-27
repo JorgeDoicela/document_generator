@@ -237,7 +237,9 @@ def _estilos(doc, tema=None):
     _fuente_fija(normal.element.get_or_add_rPr(), f_nombre)
     _idioma(normal.element.get_or_add_rPr())
     normal.paragraph_format.line_spacing = interlineado
+    normal.paragraph_format.space_before = Pt(0)
     normal.paragraph_format.space_after = Pt(espacio_despues)
+    normal.paragraph_format.widow_control = True
 
     for nivel in (1, 2, 3):
         est = doc.styles[f"Heading {nivel}"]
@@ -250,21 +252,32 @@ def _estilos(doc, tema=None):
         pf = est.paragraph_format
         pf.alignment = WD_ALIGN_PARAGRAPH.CENTER if (nivel == 1 and h1_centrado) else WD_ALIGN_PARAGRAPH.LEFT
         pf.line_spacing = interlineado
-        pf.space_before = Pt(12 if nivel == 1 else 10)
+        pf.space_before = Pt(12 if nivel == 1 else 10) if tema is not None else Pt(0)
         pf.space_after = Pt(4 if tema is not None else 0)
         pf.keep_with_next = True
+        pf.widow_control = True
         pf.first_line_indent = Inches(0)
 
     viñetas = doc.styles["List Bullet"]
     viñetas.font.name = f_nombre
+    viñetas.font.size = Pt(tam_cuerpo)
     viñetas.font.color.rgb = color_txt
+    _fuente_fija(viñetas.element.get_or_add_rPr(), f_nombre)
+    viñetas.paragraph_format.line_spacing = interlineado
+    viñetas.paragraph_format.widow_control = True
 
 
 def _numero_de_pagina(section):
     p = section.header.paragraphs[0]
     p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     p.paragraph_format.line_spacing = 1.0
-    _campo(p, "PAGE")
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(0)
+    run = _campo(p, "PAGE")
+    run.font.name = FUENTE
+    run.font.size = Pt(12)
+    run.font.color.rgb = NEGRO
+    _fuente_fija(run._element.get_or_add_rPr(), FUENTE)
 
 
 def _campo(parrafo_, instruccion, texto_previo=""):
@@ -509,7 +522,9 @@ def referencia(doc, texto):
     pf.line_spacing = tema.interlineado if tema is not None else 2.0
     pf.left_indent = Inches(0.5)
     pf.first_line_indent = Inches(-0.5)
+    pf.space_before = Pt(0)
     pf.space_after = Pt(tema.espacio_despues if tema is not None else 0)
+    pf.widow_control = True
     _agregar_texto_enriquecido(p, texto, f_nombre=f_nombre, tamano=tam, color=color_txt)
     return p
 
@@ -985,11 +1000,21 @@ def nuevo_documento(*, titulo, materia, salida, fecha=None, docente=None, tarea=
         `grupo` e `integrantes` se toman de TAREA.md y de la materia cuando no se pasan aquí.
       - fecha: str o datetime.date; por defecto la de entrega, o la de hoy.
       - indice: añade un índice automático tras la portada.
-      - formato: preset ("apa7", "academico", "tecnico", "ejecutivo", "ieee"), nombre de tema
-        en themes/ o themes/local/, ruta a un theme.json, o None (auto-detección por TAREA.md o .env).
+      - formato: preset oficial ("apa7"), nombre de tema en themes/ o themes/local/,
+        ruta a un theme.json, o None (auto-detección por TAREA.md o .env).
     """
     salida = os.fspath(salida)
-    cfg_actual = _cfg()
+    try:
+        cfg_actual = _cfg()
+    except SystemExit:
+        if institucion and (nombre or integrantes):
+            cfg_actual = {
+                "INSTITUCION": institucion,
+                "CARRERA": carrera or "",
+                "NOMBRE_ESTUDIANTE": nombre or "",
+            }
+        else:
+            raise
 
     fmt_tarea = ""
     fmt_materia = ""
@@ -1104,8 +1129,13 @@ def nuevo_documento(*, titulo, materia, salida, fecha=None, docente=None, tarea=
     props.language = IDIOMA
 
     sec = doc.sections[0]
+    sec.page_width = Inches(8.5)
+    sec.page_height = Inches(11.0)
     sec.top_margin = sec.bottom_margin = Inches(1)
     sec.left_margin = sec.right_margin = Inches(1)
+    sec.header_distance = Inches(0.5)
+    sec.footer_distance = Inches(0.5)
+    sec.different_first_page_header_footer = False
     _numero_de_pagina(sec)
 
     # ------------------------------- PORTADA -------------------------------

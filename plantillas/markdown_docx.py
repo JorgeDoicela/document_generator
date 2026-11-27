@@ -4,7 +4,7 @@
 Permite redactar documentos académicos, técnicos o ejecutivos en un archivo
 Markdown estructurado (con metadatos y referencias en frontmatter YAML),
 compilándolos directamente a `.docx` con soporte completo de:
-  - Temas y presets documentales (`apa7`, `academico`, `tecnico`, `ejecutivo`, `ieee`, JSON).
+  - Temas documentales (`apa7` o temas personalizados en `theme.json`).
   - Marcadores XML de rúbrica en encabezados (`# Sección {#C1}` o `{criterios="C1, C2"}`).
   - Criterios transversales (`transversales: [C4, C5]`).
   - Ecuaciones matemáticas OMML vectoriales (`$$ ... $$`).
@@ -385,7 +385,7 @@ def compilar_markdown(
 
     meta, cuerpo = extraer_frontmatter(origen.read_text(encoding="utf-8"))
 
-    tema_final = str(tema or meta.get("tema") or meta.get("formato") or "academico").strip()
+    tema_final = str(tema or meta.get("tema") or meta.get("formato") or "apa7").strip()
     estilo_final = str(
         estilo_citas
         or meta.get("estilo_citas")

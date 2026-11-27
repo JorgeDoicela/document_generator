@@ -291,7 +291,6 @@ class TestMotorBase(unittest.TestCase):
     def test_protocolo_y_registro(self):
         from plantillas import motor_base
         self.assertIn("apa7", motor_base.motores_disponibles())
-        self.assertIn("academico", motor_base.motores_disponibles())
         self.assertIn("institucional", motor_base.motores_disponibles())
 
         motor_apa = motor_base.obtener_motor("apa7")
@@ -442,7 +441,7 @@ class TestModalidadIndividualYGrupal(unittest.TestCase):
             doc_ind,
             titulo="Actividad 1",
             subtitulo="Programación",
-            tema="academico",
+            tema="apa7",
             modalidad="individual",
             integrantes=["Estudiante Solitario"],
         )
@@ -457,7 +456,7 @@ class TestModalidadIndividualYGrupal(unittest.TestCase):
             doc_grup,
             titulo="Laboratorio 1",
             subtitulo="Ciberseguridad",
-            tema="academico",
+            tema="apa7",
             modalidad="grupal",
             grupo="Grupo Alfa",
             integrantes=["Estudiante 1", "Estudiante 2"],
@@ -688,8 +687,8 @@ class TestModalidadIndividualYGrupal(unittest.TestCase):
         from docx import Document
         doc = Document()
         # Llamar dos veces seguidas no debe duplicar runs en header ni en footer
-        inst.configurar_pagina(doc, tema="academico")
-        inst.configurar_pagina(doc, tema="academico")
+        inst.configurar_pagina(doc, tema="apa7")
+        inst.configurar_pagina(doc, tema="apa7")
         sec = doc.sections[0]
         self.assertLessEqual(len(sec.header.paragraphs[0].runs), 1)
         self.assertEqual(len(sec.footer.paragraphs[0].runs), 1)

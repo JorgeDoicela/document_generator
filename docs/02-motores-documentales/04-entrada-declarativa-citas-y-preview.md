@@ -16,8 +16,8 @@ El parser YAML integrado opera sin dependencias externas obligatorias (delega a 
 ---
 titulo: "Título del Documento"
 subtitulo: "Subtítulo o Materia"
-tema: tecnico                  # apa7 | academico | tecnico | ejecutivo | ieee | nombre_tema_json
-estilo_citas: ieee             # apa7 | ieee | vancouver (defecto: ieee si tema=ieee, sino apa7)
+tema: apa7                     # apa7 | nombre_tema_json | ruta/theme.json
+estilo_citas: apa7             # apa7 | ieee | vancouver
 modalidad: individual          # individual | grupal
 autor: "Ana Pérez"             # o lista en integrantes: ["Ana Pérez", "Luis Gómez"]
 grupo: "Grupo 1"               # opcional en modalidad grupal
@@ -97,10 +97,10 @@ El módulo [preview_tema.py](../../plantillas/preview_tema.py) genera un documen
 
 ```bash
 # Generar vista previa (.docx y .pdf) de un tema específico en themes/.previews/
-./tareas temas --preview tecnico
-./tareas temas --preview ieee --citas ieee
+./tareas temas --preview apa7
+./tareas temas --preview apa7 --citas ieee
 
-# Generar muestras para todos los temas disponibles (presets + locales)
+# Generar muestras para todos los temas disponibles (apa7 + locales)
 ./tareas temas --preview todos --sin-pdf
 ```
 

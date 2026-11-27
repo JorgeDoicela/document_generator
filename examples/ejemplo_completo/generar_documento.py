@@ -2,7 +2,7 @@
 """Ejemplo autocontenido y reproducible del framework documental rubric-driven.
 
 Demuestra:
-- Portada y tipografía mediante MotorInstitucional (preset `tecnico`).
+- Portada y tipografía mediante preset oficial `apa7` (y compatibilidad con temas JSON).
 - Resumen ejecutivo con palabras clave e índice automático TOC.
 - Marcadores XML de rúbrica (`criterios="C1"` y `marcar_transversal`).
 - Ecuaciones vectoriales OMML con normalización automática de LaTeX.
@@ -43,8 +43,8 @@ def construir_documento(salida: Path | None = None) -> Path:
 
     doc = inst.nuevo_documento_tematico(
         titulo="Arquitectura Documental Guiada por Rúbricas",
-        subtitulo="Ejemplo Reproducible — Preset Técnico",
-        tema="tecnico",
+        subtitulo="Ejemplo Reproducible — Estándar APA 7",
+        tema="apa7",
         institucion="Universidad Ejemplo",
         organizacion="Facultad de Ingeniería",
         integrantes=["Ana Perez"],
@@ -84,9 +84,9 @@ def construir_documento(salida: Path | None = None) -> Path:
     inst.titulo_seccion(doc, "2. Comparativa Tabular y Código Reproducible", nivel=1, criterios="C2")
     inst.parrafo(
         doc,
-        "El motor documental desacopla el contenido semántico de la identidad visual mediante presets "
-        "integrados y archivos `theme.json` externos. De este modo, un mismo script puede compilarse "
-        "bajo norma APA 7, informe académico institucional, especificación técnica o artículo IEEE sin "
+        "El motor documental desacopla el contenido semántico de la identidad visual mediante el preset "
+        "oficial APA 7 y archivos `theme.json` externos. De este modo, un mismo script puede compilarse "
+        "bajo norma APA 7 o bajo cualquier tema institucional personalizado en `themes/local/` sin "
         "duplicar lógica ni modificar la estructura de criterios. Asimismo, todas las tablas se construyen "
         "con `w:tblLayout=\"fixed\"`, anchos proporcionales calculados automáticamente y repetición de "
         "cabeceras en saltos de página para garantizar fidelidad tipográfica al exportar a PDF.\n"
@@ -97,23 +97,21 @@ def construir_documento(salida: Path | None = None) -> Path:
     )
     inst.tabla(
         doc,
-        encabezados=["Preset", "Tipografía", "Interlineado", "Aplicación Principal"],
+        encabezados=["Modo", "Tipografía", "Interlineado", "Aplicación Principal"],
         filas=[
-            ["apa7", "Times New Roman 12 pt", "2.0", "Ensayos y trabajos universitarios APA 7"],
-            ["academico", "Arial 11 pt", "1.15", "Informes académicos e institucionales"],
-            ["tecnico", "Calibri 10.5 pt", "1.15", "Laboratorios, especificaciones y RFCs"],
-            ["ejecutivo", "Arial 10.5 pt", "1.2", "Propuestas y reportes gerenciales"],
-            ["ieee", "Times New Roman 10.5 pt", "1.08", "Artículos científico-técnicos"],
+            ["apa7 (oficial)", "Times New Roman 12 pt", "2.0", "Ensayos y trabajos universitarios APA 7"],
+            ["theme.json", "Configurable", "Configurable", "Plantillas institucionales o corporativas"],
+            ["--extraer DOCX", "Inferida del .docx", "Inferido", "Clonado automático de formatos docentes"],
         ],
-        estilo=EstilosTabla.GRID,
+        estilo=EstilosTabla.APA,
         numero_tabla=1,
-        titulo_tabla="Catálogo de Presets Documentales Integrados",
+        titulo_tabla="Modos de Maquetación Documental Soportados",
     )
     inst.parrafo(doc, "")
     bloque_codigo_word(
         doc,
         'from plantillas import formato_institucional as inst\n'
-        'doc = inst.nuevo_documento_tematico("Informe RFC", tema="tecnico")\n'
+        'doc = inst.nuevo_documento_tematico("Informe APA 7", tema="apa7")\n'
         'inst.titulo_seccion(doc, "1. Alcance", nivel=1, criterios="C1")\n',
         archivo="ejemplo_uso.py",
         lenguaje="Python",

@@ -3,7 +3,7 @@
 - **Materia:** Ingeniería de Software y Documentación
 - **Tipo:** Actividad (A)
 - **Modalidad:** Individual
-- **Formato:** tecnico
+- **Formato:** apa7
 - **Extensión:** ~320 palabras
 - **Estado:** lista
 

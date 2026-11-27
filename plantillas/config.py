@@ -31,7 +31,7 @@ OBLIGATORIAS = {
 OPCIONALES = {
     "GRUPO_DEFECTO": "grupo por defecto para tareas grupales, p. ej. Grupo 1",
     "INTEGRANTES_DEFECTO": "lista de integrantes por defecto para tareas grupales separada por comas",
-    "TEMA_DEFECTO": "tema documental por defecto (apa7, academico, tecnico, ejecutivo, ieee o ruta JSON)",
+    "TEMA_DEFECTO": "tema documental por defecto (apa7 o nombre/ruta de theme.json)",
     "ESTILO_TABLA": "estilo de tablas por defecto (apa o grid)",
     "COPIAR_PDF_DESCARGAS": "copia el PDF final a la carpeta Descargas del sistema (true/false, defecto false)",
 }

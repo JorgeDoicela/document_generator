@@ -1,7 +1,7 @@
 ---
 titulo: "Especificación Declarativa de Pipeline Documental"
 subtitulo: "Ejemplo Reproducible Markdown/YAML — IEEE Numérico"
-tema: tecnico
+tema: apa7
 estilo_citas: ieee
 modalidad: individual
 autor: "Ana Pérez"

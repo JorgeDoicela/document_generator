@@ -2,29 +2,26 @@
 
 Los módulos `plantillas.formato_institucional`, `plantillas.temas`, `plantillas.extractor_tema`, `plantillas.omml` y `plantillas.bloques` conforman un motor documental multi-propósito totalmente desacoplado de marcas o universidades específicas.
 
-Permite generar informes académicos, especificaciones técnicas (RFCs), reportes ejecutivos, artículos estilo IEEE o documentos con la identidad visual de cualquier institución mediante **presets integrados** o archivos **`theme.json`** configurables.
+Permite generar documentos bajo el estándar oficial **APA 7** o con la identidad visual de cualquier institución mediante archivos **`theme.json`** configurables.
 
 ---
 
 ## 1. Catálogo de Presets y Temas JSON (`plantillas.temas`)
 
-El sistema incluye cinco presets integrados y carga dinámicamente temas personalizados desde `themes/<nombre>/theme.json` o `themes/local/<nombre>/theme.json` (ignorado por Git para marcas privadas):
+El sistema mantiene `apa7` como único preset integrado y carga dinámicamente temas personalizados desde `themes/<nombre>/theme.json` o `themes/local/<nombre>/theme.json` (ignorado por Git para marcas privadas):
 
-| Preset | Tipografía | Interlineado | Estilo de Tabla | Caso de Uso |
+| Preset / Modo | Tipografía | Interlineado | Estilo de Tabla | Caso de Uso |
 |---|---|---|---|---|
-| `apa7` | Times New Roman 12 pt | `2.0` | `apa` (3 líneas) | Ensayos y trabajos universitarios bajo APA 7. |
-| `academico` | Arial 11 pt | `1.15` | `grid` | Informes académicos e institucionales modernos. |
-| `tecnico` | Calibri 10.5 pt | `1.15` | `grid` | Laboratorios, arquitectura de software y RFCs. |
-| `ejecutivo` | Arial 10.5 pt | `1.2` | `apa` | Propuestas, reportes gerenciales y memorias. |
-| `ieee` | Times New Roman 10.5 pt | `1.08` | `apa` | Artículos científico-técnicos compactos. |
+| `apa7` | Times New Roman 12 pt | `2.0` | `apa` (3 líneas) | Estándar oficial APA 7.ª edición (US Letter, márgenes 1"). |
+| `theme.json` | Configurable | Configurable | `apa` o `grid` | Plantillas institucionales o personalizadas en `themes/` o `themes/local/`. |
 
 ### Esquema de `theme.json`
 
-Un tema personalizado se crea manualmente (`./tareas temas --crear mi-tema --base academico --local`) o se extrae automáticamente desde cualquier plantilla `.docx` existente (`./tareas temas --extraer plantilla.docx --nombre mi-tema`):
+Un tema personalizado se crea manualmente (`./tareas temas --crear mi-tema --base apa7 --local`) o se extrae automáticamente desde cualquier plantilla `.docx` existente (`./tareas temas --extraer plantilla.docx --nombre mi-tema`):
 
 | Clave JSON | Tipo | Uso |
 |---|---|---|
-| `hereda` | `str` | Preset base (`apa7`, `academico`, `tecnico`, `ejecutivo`, `ieee`). |
+| `hereda` | `str` | Preset base (`apa7`). |
 | `fuente`, `tamano_cuerpo`, `tamano_h1..h3` | `str` / `float` | Jerarquía tipográfica de cuerpo y encabezados. |
 | `interlineado`, `espacio_despues`, `margen_*` | `float` | Geometría de página (márgenes en pulgadas) y espaciado. |
 | `color_primario`, `color_texto`, `color_secundario` | Hex (`#1B365D`) o RGB | Paleta cromática de títulos, portada y pies. |
@@ -39,7 +36,7 @@ Un tema personalizado se crea manualmente (`./tareas temas --crear mi-tema --bas
 `formato_institucional.aplicar_portada()` (invocada automáticamente por `nuevo_documento_tematico()` y por `apa_docx.nuevo_documento(..., formato=...)`) soporta autoría individual, grupal y corporativa:
 
 1. **Modalidad Individual vs. Grupal:**
-   - **Individual:** imprime `ESTUDIANTE:` (en temas académicos o tareas con `TAREA.md`) o `AUTOR:` (en temas técnicos/ejecutivos/IEEE), tomando estrictamente el primer integrante (`lista[:1]`).
+   - **Individual:** imprime `ESTUDIANTE:` (en `apa7` o tareas con `TAREA.md`) o `AUTOR:` (en temas JSON independientes), tomando estrictamente el primer integrante (`lista[:1]`).
    - **Grupal:** imprime `{(grupo or 'GRUPO DE TRABAJO').upper()} — INTEGRANTES:` seguido de la lista completa de integrantes.
 2. **Resolución Jerárquica de Integrantes:**
    - Parámetro explícito `integrantes` → metadatos de `TAREA.md` → `INTEGRANTES_DEFECTO` en `.env` → `NOMBRE_ESTUDIANTE` en `.env` → fallback `"Autor"`.
@@ -60,7 +57,7 @@ from plantillas import formato_institucional as inst
 doc = inst.nuevo_documento_tematico(
     titulo="Especificación de Arquitectura",
     subtitulo="RFC-01",
-    tema="tecnico",
+    tema="apa7",
     incluir_indice=True,
 )
 inst.titulo_seccion(doc, "1. Alcance y Requisitos", nivel=1, criterios="C1")

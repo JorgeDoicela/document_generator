@@ -22,23 +22,40 @@ from plantillas import formato_institucional as inst
 RAIZ = Path(__file__).resolve().parent.parent
 
 
+def _tema_custom_demo() -> temas.TemaDocumental:
+    return temas.TemaDocumental(
+        nombre="custom_demo",
+        descripcion="Tema personalizado de prueba (Calibri 10.5 pt, azul institucional).",
+        fuente="Calibri",
+        tamano_cuerpo=10.5,
+        tamano_h1=14.0,
+        tamano_h2=12.0,
+        tamano_h3=11.0,
+        interlineado=1.15,
+        espacio_despues=5.0,
+        color_primario=(15, 76, 129),
+        estilo_tabla="grid",
+    )
+
+
 class TestTemasDocumentales(unittest.TestCase):
-    def test_presets_integrados_disponibles(self):
-        disponibles = temas.listar_temas()
-        for esperado in ("apa7", "academico", "tecnico", "ejecutivo", "ieee"):
-            self.assertIn(esperado, disponibles)
-            t = temas.cargar_tema(esperado)
-            self.assertEqual(t.nombre, esperado)
+    def test_preset_oficial_apa7_disponible(self):
+        self.assertEqual(list(temas.PRESETS.keys()), ["apa7"])
+        self.assertIn("apa7", temas.listar_temas())
+        t = temas.cargar_tema("apa7")
+        self.assertEqual(t.nombre, "apa7")
+        self.assertEqual(t.fuente, "Times New Roman")
+        self.assertEqual(t.interlineado, 2.0)
 
     def test_exportar_y_cargar_tema_json_personalizado(self):
         with tempfile.TemporaryDirectory() as tmp:
             destino = Path(tmp) / "mi_uni"
-            archivo = temas.exportar_molde_tema(destino, nombre="mi_uni", base="tecnico")
+            archivo = temas.exportar_molde_tema(destino, nombre="mi_uni", base="apa7")
             self.assertTrue(archivo.is_file())
             cargado = temas.cargar_tema(archivo)
             self.assertEqual(cargado.nombre, "mi_uni")
-            self.assertEqual(cargado.fuente, "Calibri")
-            self.assertEqual(cargado.color_primario, (15, 76, 129))
+            self.assertEqual(cargado.fuente, "Times New Roman")
+            self.assertEqual(cargado.color_primario, (0, 0, 0))
 
     def test_tema_inexistente_lanza_error(self):
         with self.assertRaises(ValueError):
@@ -47,17 +64,53 @@ class TestTemasDocumentales(unittest.TestCase):
 
 class TestMotoresMultiProposito(unittest.TestCase):
     def test_motores_registrados_cumplen_protocolo(self):
-        for clave in ("apa7", "academico", "institucional", "tecnico", "ejecutivo", "ieee"):
+        self.assertEqual(motor_base.motores_disponibles(), ["apa7", "institucional"])
+        for clave in ("apa7", "institucional"):
             cls = motor_base.obtener_motor(clave)
             self.assertIsNotNone(cls, f"Motor {clave} no registrado")
             instancia = cls()
             self.assertIsInstance(instancia, motor_base.BaseDocumentEngine)
 
+    def test_apa7_estandar_editorial_us_letter_encabezados_y_paginacion(self):
+        from docx.oxml.ns import qn
+        from docx.shared import Inches, Pt
+
+        from plantillas import apa_docx
+
+        with tempfile.TemporaryDirectory() as tmp:
+            env_tmp = Path(tmp) / ".env"
+            env_tmp.write_text(
+                'NOMBRE_ESTUDIANTE="Ana Perez"\nINSTITUCION="Universidad Ejemplo"\n'
+                'CARRERA="Software"\nSUFIJO_ARCHIVOS="Perez_Ana"\n',
+                encoding="utf-8",
+            )
+            with mock.patch.object(config, "ARCHIVO_ENV", env_tmp), mock.patch.object(apa_docx, "_config", None):
+                doc, _fig, _tab = apa_docx.nuevo_documento(
+                    titulo="Ensayo APA 7",
+                    materia="Metodología",
+                    salida=Path(tmp) / "apa.docx",
+                    formato="apa7",
+                )
+            sec = doc.sections[0]
+            self.assertAlmostEqual(sec.page_width.inches, 8.5, places=2)
+            self.assertAlmostEqual(sec.page_height.inches, 11.0, places=2)
+            self.assertAlmostEqual(sec.top_margin.inches, 1.0, places=2)
+            self.assertAlmostEqual(sec.header_distance.inches, 0.5, places=2)
+            self.assertFalse(sec.different_first_page_header_footer)
+            self.assertEqual(doc.styles["Heading 1"].paragraph_format.space_before, Pt(0))
+            self.assertTrue(doc.styles["Normal"].paragraph_format.widow_control)
+            hdr_runs = sec.header.paragraphs[0].runs
+            self.assertTrue(hdr_runs)
+            self.assertEqual(hdr_runs[0].font.name, "Times New Roman")
+            self.assertEqual(hdr_runs[0].font.size, Pt(12))
+            self.assertIsNotNone(hdr_runs[0]._element.find(f".//{qn('w:rFonts')}"))
+            self.assertEqual(Inches(1), sec.left_margin)
+
     def test_documento_tematico_con_resumen_toc_y_codigo_inline(self):
         doc = inst.nuevo_documento_tematico(
             titulo="Especificación de Arquitectura",
             subtitulo="RFC-001",
-            tema="tecnico",
+            tema=_tema_custom_demo(),
             integrantes=["Ana Perez"],
             incluir_indice=True,
         )
@@ -97,12 +150,20 @@ class TestMotoresMultiProposito(unittest.TestCase):
             )
             self.assertIn("graphicData", doc.element.xml)
 
-    def test_apa_nuevo_documento_respeta_estilos_de_tema_tecnico(self):
+    def test_apa_nuevo_documento_respeta_estilos_de_tema_json(self):
         from docx.shared import RGBColor
 
         from plantillas import apa_docx
 
         with tempfile.TemporaryDirectory() as tmp:
+            tdir = Path(tmp) / "tema_custom"
+            tdir.mkdir()
+            tjson = tdir / "theme.json"
+            tjson.write_text(
+                '{"nombre": "tema_custom", "fuente": "Calibri", "interlineado": 1.15, '
+                '"color_primario": "#0F4C81"}',
+                encoding="utf-8",
+            )
             env_tmp = Path(tmp) / ".env"
             env_tmp.write_text(
                 'NOMBRE_ESTUDIANTE="Ana Perez"\nINSTITUCION="Universidad Ejemplo"\n'
@@ -114,10 +175,10 @@ class TestMotoresMultiProposito(unittest.TestCase):
                     titulo="Spec Tecnica",
                     materia="Arquitectura",
                     salida=Path(tmp) / "out.docx",
-                    formato="tecnico",
+                    formato=str(tjson),
                     indice=True,
                 )
-                p = apa_docx.parrafo(doc, "Texto con `codigo_inline` en tema técnico.")
+                p = apa_docx.parrafo(doc, "Texto con `codigo_inline` en tema personalizado.")
             self.assertEqual(doc.styles["Normal"].font.name, "Calibri")
             self.assertEqual(doc.styles["Heading 1"].font.color.rgb, RGBColor(15, 76, 129))
             self.assertEqual(p.runs[0].font.name, "Calibri")
@@ -141,16 +202,18 @@ class TestMotoresMultiProposito(unittest.TestCase):
             self.assertTrue(hasattr(apa_docx, simbolo))
 
         with tempfile.TemporaryDirectory() as tmp:
+            tjson = Path(tmp) / "mi_tema.json"
+            tjson.write_text('{"nombre": "mi_tema", "fuente": "Arial", "interlineado": 1.2}', encoding="utf-8")
             env_tmp = Path(tmp) / ".env"
             env_tmp.write_text(
                 'NOMBRE_ESTUDIANTE="Ana Perez"\nINSTITUCION="Universidad Ejemplo"\n'
                 'CARRERA="Software"\nSUFIJO_ARCHIVOS="Perez_Ana"\n'
-                'TEMA_DEFECTO="ejecutivo"\n',
+                f'TEMA_DEFECTO="{tjson.as_posix()}"\n',
                 encoding="utf-8",
             )
             with mock.patch.object(config, "ARCHIVO_ENV", env_tmp), mock.patch.object(apa_docx, "_config", None):
                 doc, _fig, _tab = apa_docx.nuevo_documento(
-                    titulo="Reporte Ejecutivo",
+                    titulo="Reporte Personalizado",
                     materia="Estrategia",
                     salida=Path(tmp) / "exec.docx",
                 )
@@ -313,7 +376,7 @@ class TestRegresionesTipograficasYTemas(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             doc = inst.nuevo_documento_tematico(
                 titulo="Informe Técnico",
-                tema="tecnico",
+                tema=_tema_custom_demo(),
                 integrantes=["Ana Perez"],
                 incluir_indice=True,
             )
@@ -378,7 +441,7 @@ class TestRegresionesTipograficasYTemas(unittest.TestCase):
         doc = inst.nuevo_documento_tematico(
             titulo="Informe de Investigación",
             subtitulo="Metodología",
-            tema="tecnico",
+            tema=_tema_custom_demo(),
             docente="Dra. Laura Gómez",
             integrantes=["Ana Perez"],
         )
@@ -407,10 +470,12 @@ class TestRegresionesTipograficasYTemas(unittest.TestCase):
             mat_dir = tmp_p / "materias" / "arq"
             tar_dir = mat_dir / "A1_Prueba"
             tar_dir.mkdir(parents=True)
+            tjson = tmp_p / "tema_mat.json"
+            tjson.write_text('{"nombre": "tema_mat", "fuente": "Calibri"}', encoding="utf-8")
             (mat_dir / "MATERIA.md").write_text(
                 "# Arquitectura\n\n| Campo | Valor |\n|---|---|\n"
                 "| Docente | Dr. Carlos Ruiz |\n"
-                "| Formato que pide el docente | tecnico |\n",
+                f"| Formato que pide el docente | {tjson.as_posix()} |\n",
                 encoding="utf-8",
             )
             (tar_dir / "TAREA.md").write_text(
@@ -433,7 +498,7 @@ class TestRegresionesTipograficasYTemas(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             doc = inst.nuevo_documento_tematico(
                 titulo="Auditoría Tablas",
-                tema="tecnico",
+                tema=_tema_custom_demo(),
                 integrantes=["Ana Perez"],
             )
             inst.titulo_seccion(doc, "1. Resultados", nivel=1, criterios="C1")
@@ -492,12 +557,12 @@ class TestRegresionesTipograficasYTemas(unittest.TestCase):
         from plantillas import ficha
 
         t = ficha.leer_tarea(RAIZ / "examples" / "ejemplo_completo")
-        self.assertEqual(t.formato, "tecnico")
+        self.assertEqual(t.formato, "apa7")
 
     def test_formato_institucional_limpia_markdown_y_emite_campo_page_completo(self):
         doc = inst.nuevo_documento_tematico(
             titulo="Prueba Limpieza",
-            tema="tecnico",
+            tema=_tema_custom_demo(),
             integrantes=["Ana Perez"],
         )
         p = inst.titulo_seccion(doc, "1. **Sección** con *énfasis*", nivel=1, criterios="C1")
@@ -516,12 +581,18 @@ class TestRegresionesTipograficasYTemas(unittest.TestCase):
     def test_resumen_ejecutivo_hereda_tema_y_celda_tabla_soporta_codigo_inline(self):
         from plantillas import visual
 
+        tema_compacto = temas.TemaDocumental(
+            nombre="compacto",
+            fuente="Times New Roman",
+            interlineado=1.08,
+            estilo_tabla="apa",
+        )
         doc = inst.nuevo_documento_tematico(
             titulo="Coherencia Temática",
-            tema="ieee",
+            tema=tema_compacto,
             integrantes=["Ana Perez"],
         )
-        p_res = bloques.resumen_ejecutivo(doc, "Síntesis experimental.", palabras_clave=["IEEE"])
+        p_res = bloques.resumen_ejecutivo(doc, "Síntesis experimental.", palabras_clave=["APA"])
         self.assertAlmostEqual(p_res.paragraph_format.line_spacing, 1.08, places=2)
 
         t = inst.tabla(
@@ -569,7 +640,7 @@ class TestRegresionesTipograficasYTemas(unittest.TestCase):
                 grupo=None,
                 integrantes=None,
                 estudiante=None,
-                formato="tecnico",
+                formato="apa7",
             )
             with mock.patch.object(config, "ARCHIVO_ENV", env_tmp), mock.patch.object(
                 tareas, "MATERIAS", materias_tmp
@@ -577,7 +648,7 @@ class TestRegresionesTipograficasYTemas(unittest.TestCase):
                 tareas.cmd_tarea(args)
 
             t = ficha.leer_tarea(materias_tmp / "redes" / "P1_Arquitectura_Zero_Trust")
-            self.assertEqual(t.formato, "tecnico")
+            self.assertEqual(t.formato, "apa7")
 
     def test_rfonts_en_portada_tablas_toc_y_etiqueta_omml(self):
         from docx.oxml.ns import qn
@@ -587,7 +658,7 @@ class TestRegresionesTipograficasYTemas(unittest.TestCase):
         doc = inst.nuevo_documento_tematico(
             titulo="Verificación Tipográfica",
             subtitulo="Auditoría OpenXML",
-            tema="tecnico",
+            tema=_tema_custom_demo(),
             integrantes=["Ana Perez"],
             incluir_indice=True,
         )

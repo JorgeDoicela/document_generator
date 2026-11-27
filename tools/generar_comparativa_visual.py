@@ -61,9 +61,9 @@ def generar(nombre_proyecto: str | None = None) -> Path:
     doc = inst.nuevo_documento_tematico(
         titulo="Guía y Comparativa de Estilos Visuales",
         subtitulo="Framework Documental Rubric-Driven",
-        tema="tecnico",
+        tema="apa7",
         institucion="Proyecto Open Source",
-        organizacion="Motor Documental Multi-Propósito",
+        organizacion="Motor Documental",
         integrantes=["Equipo Editorial"],
     )
 
@@ -94,13 +94,11 @@ def generar(nombre_proyecto: str | None = None) -> Path:
     )
 
     inst.titulo_seccion(doc, "3. Comparativa de Tablas (APA 7 vs. Grid)", nivel=1)
-    encabezados = ["Preset", "Tipografía", "Interlineado", "Caso de Uso"]
+    encabezados = ["Modo", "Tipografía", "Interlineado", "Caso de Uso"]
     filas = [
-        ["apa7", "Times New Roman 12 pt", "2.0", "Ensayos y trabajos universitarios APA 7"],
-        ["academico", "Arial 11 pt", "1.15", "Informes académicos e institucionales"],
-        ["tecnico", "Calibri 10.5 pt", "1.15", "Laboratorios, RFCs y arquitectura"],
-        ["ejecutivo", "Arial 10.5 pt", "1.2", "Propuestas y reportes gerenciales"],
-        ["ieee", "Times New Roman 10.5 pt", "1.08", "Artículos científico-técnicos"],
+        ["apa7 (oficial)", "Times New Roman 12 pt", "2.0", "Ensayos y trabajos universitarios APA 7"],
+        ["theme.json", "Configurable", "Configurable", "Plantillas institucionales o personalizadas"],
+        ["--extraer DOCX", "Inferida del .docx", "Inferido", "Clonado automático de formatos docentes"],
     ]
     tabla_estilizada(
         doc,

@@ -377,7 +377,7 @@ def extraer_tema_desde_docx(
     # 7. Escribir theme.json y cargar como TemaDocumental validado
     datos_json = {
         "nombre": slug,
-        "hereda": "academico",
+        "hereda": "apa7",
         "descripcion": f"Tema extraído automáticamente desde {archivo.name}.",
         "fuente": fuente,
         "tamano_cuerpo": tam_cuerpo,

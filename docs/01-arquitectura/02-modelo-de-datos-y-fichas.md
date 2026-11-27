@@ -58,7 +58,7 @@ Cada carpeta de tarea contiene de manera obligatoria una ficha `TAREA.md` estruc
 
 ## Formato
 
-<APA 7, academico, tecnico, ejecutivo, ieee o nombre de tema local en themes/local/>
+<apa7 o nombre de tema personalizado en themes/ o themes/local/>
 ```
 
 ### Campos de Cabecera:
@@ -115,7 +115,7 @@ Cada asignatura cuenta con su archivo `MATERIA.md` (con fallback de compatibilid
 
 - **Docente:** <Nombre del Docente>
 - **Plataforma:** <EVA / Moodle / Canvas>
-- **Formato:** <APA 7 / academico / tecnico / ejecutivo / ieee / tema-local>
+- **Formato:** <apa7 / tema-personalizado>
 - **Reglas del docente:** <Restricciones específicas de formato o entrega>
 
 ## Tareas

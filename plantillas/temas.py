@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Sistema extensible de temas documentales (presets + temas JSON personalizados).
+"""Sistema extensible de temas documentales (preset oficial APA 7 + temas JSON personalizados).
 
-Permite generar cualquier tipo de documento (académico APA 7, informe institucional,
-especificación técnica/RFC, informe ejecutivo, artículo estilo IEEE o identidad
-propia de cualquier universidad/organización) sin hardcodear marcas en el código fuente.
+Mantiene `apa7` como único preset integrado bajo el estándar APA 7.a edición,
+y permite cargar cualquier tema institucional o personalizado vía `theme.json`
+en `themes/` o `themes/local/` (o extraerlo desde un `.docx` existente).
 """
 import json
 import sys
@@ -82,7 +82,7 @@ class TemaDocumental:
 PRESETS: Dict[str, TemaDocumental] = {
     "apa7": TemaDocumental(
         nombre="apa7",
-        descripcion="Norma APA 7.a edición (Times New Roman 12 pt, doble espacio, tablas 3 líneas).",
+        descripcion="Norma APA 7.a edición (US Letter, Times New Roman 12 pt, doble espacio, márgenes 1\", tablas 3 líneas).",
         fuente="Times New Roman",
         tamano_cuerpo=12.0,
         tamano_h1=12.0,
@@ -101,90 +101,6 @@ PRESETS: Dict[str, TemaDocumental] = {
         color_secundario=(80, 80, 80),
         estilo_tabla="apa",
     ),
-    "academico": TemaDocumental(
-        nombre="academico",
-        descripcion="Informe académico institucional moderno (Arial 11 pt, interlineado 1.15, tablas Grid).",
-        fuente="Arial",
-        tamano_cuerpo=11.0,
-        tamano_h1=13.0,
-        tamano_h2=11.5,
-        tamano_h3=11.0,
-        interlineado=1.15,
-        espacio_despues=6.0,
-        sangria_primera_linea=False,
-        h1_centrado=False,
-        margen_sup=0.85,
-        margen_inf=0.85,
-        margen_izq=1.0,
-        margen_der=1.0,
-        color_primario=(27, 54, 93),
-        color_texto=(20, 20, 20),
-        color_secundario=(105, 115, 125),
-        estilo_tabla="grid",
-    ),
-    "tecnico": TemaDocumental(
-        nombre="tecnico",
-        descripcion="Informe técnico, laboratorio, arquitectura o RFC (Calibri 10.5 pt, limpio y compacto).",
-        fuente="Calibri",
-        tamano_cuerpo=10.5,
-        tamano_h1=14.0,
-        tamano_h2=12.0,
-        tamano_h3=11.0,
-        interlineado=1.15,
-        espacio_despues=5.0,
-        sangria_primera_linea=False,
-        h1_centrado=False,
-        margen_sup=0.8,
-        margen_inf=0.8,
-        margen_izq=0.9,
-        margen_der=0.9,
-        color_primario=(15, 76, 129),
-        color_texto=(25, 28, 32),
-        color_secundario=(95, 105, 118),
-        estilo_tabla="grid",
-    ),
-    "ejecutivo": TemaDocumental(
-        nombre="ejecutivo",
-        descripcion="Informe ejecutivo, propuesta comercial o memoria corporativa (Georgia/Arial sobrio).",
-        fuente="Arial",
-        tamano_cuerpo=10.5,
-        tamano_h1=14.5,
-        tamano_h2=12.0,
-        tamano_h3=10.5,
-        interlineado=1.2,
-        espacio_despues=6.0,
-        sangria_primera_linea=False,
-        h1_centrado=False,
-        margen_sup=0.9,
-        margen_inf=0.9,
-        margen_izq=1.0,
-        margen_der=1.0,
-        color_primario=(31, 41, 55),
-        color_texto=(20, 20, 20),
-        color_secundario=(107, 114, 128),
-        estilo_tabla="apa",
-    ),
-    "ieee": TemaDocumental(
-        nombre="ieee",
-        descripcion="Artículo técnico-científico estilo IEEE (Times New Roman 10.5 pt, compacto).",
-        fuente="Times New Roman",
-        tamano_cuerpo=10.5,
-        tamano_h1=11.5,
-        tamano_h2=10.5,
-        tamano_h3=10.5,
-        interlineado=1.08,
-        espacio_despues=4.0,
-        sangria_primera_linea=True,
-        h1_centrado=True,
-        margen_sup=0.75,
-        margen_inf=0.75,
-        margen_izq=0.75,
-        margen_der=0.75,
-        color_primario=(0, 0, 0),
-        color_texto=(0, 0, 0),
-        color_secundario=(90, 90, 90),
-        estilo_tabla="apa",
-    ),
 }
 
 
@@ -201,8 +117,8 @@ def _normalizar_rgb(valor: Union[List[int], Tuple[int, int, int], str]) -> RGBTu
 
 def _cargar_desde_json(ruta_json: Path) -> TemaDocumental:
     datos = json.loads(ruta_json.read_text(encoding="utf-8"))
-    base_nombre = str(datos.pop("hereda", "academico")).lower()
-    base = PRESETS.get(base_nombre, PRESETS["academico"])
+    base_nombre = str(datos.pop("hereda", "apa7")).lower()
+    base = PRESETS.get(base_nombre, PRESETS["apa7"])
     campos = asdict(base)
     campos["directorio_base"] = str(ruta_json.parent.resolve())
 
@@ -219,8 +135,8 @@ def _cargar_desde_json(ruta_json: Path) -> TemaDocumental:
     return TemaDocumental(**campos)
 
 
-def cargar_tema(nombre_o_ruta: Union[str, Path, TemaDocumental] = "academico") -> TemaDocumental:
-    """Resuelve un tema desde presets integrados, ruta JSON directa o carpetas themes/ y themes/local/."""
+def cargar_tema(nombre_o_ruta: Union[str, Path, TemaDocumental] = "apa7") -> TemaDocumental:
+    """Resuelve un tema desde el preset integrado (apa7), ruta JSON directa o carpetas themes/ y themes/local/."""
     if isinstance(nombre_o_ruta, TemaDocumental):
         return nombre_o_ruta
 
@@ -258,9 +174,9 @@ def _rgb_a_hex(rgb: RGBTuple) -> str:
     return f"#{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}"
 
 
-def exportar_molde_tema(destino: Path, nombre: str, base: str = "academico") -> Path:
+def exportar_molde_tema(destino: Path, nombre: str, base: str = "apa7") -> Path:
     """Crea un archivo theme.json listo para personalizar por cualquier usuario u organización."""
-    preset = PRESETS.get(base.lower(), PRESETS["academico"])
+    preset = PRESETS.get(base.lower(), PRESETS["apa7"])
     destino.mkdir(parents=True, exist_ok=True)
     archivo = destino / "theme.json"
     plantilla = {

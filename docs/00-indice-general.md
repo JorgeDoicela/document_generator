@@ -1,6 +1,6 @@
 # Documentación Técnica — document_generator (rubric-driven)
 
-Bienvenido a la documentación técnica modular de **document_generator**. Este repositorio implementa un sistema integral de ingeniería documental asistido por rúbricas (**rubric-driven architecture**), diseñado para la preparación, estructuración ponderada, generación estandarizada y verificación estática de documentos académicos, técnicos y ejecutivos (APA 7, temas configurables y presets institucionales).
+Bienvenido a la documentación técnica modular de **document_generator**. Este repositorio implementa un sistema integral de ingeniería documental asistido por rúbricas (**rubric-driven architecture**), diseñado para la preparación, estructuración ponderada, generación estandarizada y verificación estática de documentos bajo norma **APA 7** y temas configurables mediante `theme.json`.
 
 ---
 
@@ -40,7 +40,7 @@ docs/
 | [02. Modelo de Fichas](01-arquitectura/02-modelo-de-datos-y-fichas.md) | Especificación de esquemas Markdown para metadatos de tareas y materias. | `plantillas/ficha.py`, `plantillas/rubrica.py` |
 | [03. Arquitectura de Motores](02-motores-documentales/00-arquitectura-motores-base.md) | Protocolo abstracto BaseDocumentEngine, marcadores XML y catálogo. | `plantillas/motor_base.py` |
 | [04. Motor APA 7](02-motores-documentales/01-motor-apa7.md) | Maquetación bajo el estándar APA 7 (estudiante), citación y bibliografía. | `plantillas/apa_docx.py`, `plantillas/motor_base.py`, `plantillas/fuentes_comunes.py` |
-| [05. Motor Institucional y Temas](02-motores-documentales/02-motor-institucional-y-temas.md) | Maquetación configurable por presets/JSON (`academico`, `tecnico`, `ejecutivo`, `ieee`), extractor de `.docx`, OMML y bloques editoriales. | `plantillas/formato_institucional.py`, `plantillas/temas.py`, `plantillas/extractor_tema.py`, `plantillas/omml.py`, `plantillas/bloques.py` |
+| [05. Motor Institucional y Temas](02-motores-documentales/02-motor-institucional-y-temas.md) | Preset oficial `apa7`, temas configurables por `theme.json`, extractor de `.docx`, OMML y bloques editoriales. | `plantillas/formato_institucional.py`, `plantillas/temas.py`, `plantillas/extractor_tema.py`, `plantillas/omml.py`, `plantillas/bloques.py` |
 | [06. Componentes Visuales y Tablas](02-motores-documentales/03-componentes-visuales-y-tablas.md) | Terminales 300 DPI, tarjetas académicas sin barra lateral, código WordML y tablas (APA 7 / Grid). | `plantillas/visual.py`, `plantillas/apa_docx.py`, `plantillas/bloques.py` |
 | [07. Entrada Declarativa, Citas y Preview](02-motores-documentales/04-entrada-declarativa-citas-y-preview.md) | Compilador Markdown/YAML, citación APA 7/IEEE/Vancouver y vista previa de temas. | `plantillas/markdown_docx.py`, `plantillas/preview_tema.py`, `plantillas/apa_docx.py` |
 | [08. Especificación CLI](03-herramientas-y-cli/01-especificacion-cli-tareas.md) | Comandos del despachador `tareas` (subcomandos, flags y códigos de salida). | `plantillas/tareas.py`, `plantillas/cli/`, `tareas`, `tareas.bat` |

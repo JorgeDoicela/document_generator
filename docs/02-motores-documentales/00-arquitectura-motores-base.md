@@ -67,17 +67,17 @@ El sistema dispone de un registro dinámico (`_REGISTRO_MOTORES`) que permite in
 from plantillas import motor_base
 
 # Consulta de motores disponibles
-print(motor_base.motores_disponibles())  # ['academico', 'apa7', 'ejecutivo', 'ieee', 'institucional', 'tecnico']
+print(motor_base.motores_disponibles())  # ['apa7', 'institucional']
 
 # Instanciación por fábrica
-ClaseMotor = motor_base.obtener_motor("tecnico")
+ClaseMotor = motor_base.obtener_motor("institucional")
 motor = ClaseMotor()
 motor.configurar_pagina(doc)
 ```
 
 ### Motores Soportados:
-1. **`apa7` ([MotorAPA7](01-motor-apa7.md)):** Maquetación estricta bajo American Psychological Association (APA) 7.ª edición para estudiantes (Times New Roman 12 pt, interlineado doble, sangría francesa en referencias y numeración superior derecha).
-2. **`academico` / `institucional` / `tecnico` / `ejecutivo` / `ieee` ([MotorInstitucional](02-motor-institucional-y-temas.md)):** Maquetación configurable por temas (`plantillas/temas.py` + `plantillas/formato_institucional.py`) con soporte para presets integrados y archivos `theme.json` personalizados (logos, paletas RGB, tipografía, encabezados y numeración dinámica).
+1. **`apa7` ([MotorAPA7](01-motor-apa7.md)):** Maquetación estricta bajo American Psychological Association (APA) 7.ª edición para estudiantes (US Letter, Times New Roman 12 pt, interlineado doble, márgenes de 1", encabezados sin espaciado redundante, sangría francesa en referencias y numeración superior derecha en Times New Roman 12 pt).
+2. **`institucional` ([MotorInstitucional](02-motor-institucional-y-temas.md)):** Maquetación configurable por temas JSON (`plantillas/temas.py` + `plantillas/formato_institucional.py`) para cualquier archivo `theme.json` en `themes/` o `themes/local/` (logos, paletas RGB, tipografía, encabezados y numeración dinámica).
 
 ---
 

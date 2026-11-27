@@ -1,6 +1,6 @@
 # document_generator — Framework Documental Multi-Propósito (Rubric-Driven)
 
-Framework programático en Python para la generación, estructuración y auditoría estática de **cualquier tipo de documento profesional o académico** (ensayos APA 7, informes académicos institucionales, especificaciones técnicas y RFCs, reportes ejecutivos, artículos estilo IEEE y plantillas corporativas personalizadas vía JSON) en formato **WordML (`.docx`)** y **PDF vectorial**.
+Framework programático en Python para la generación, estructuración y auditoría estática de **documentos académicos y profesionales** bajo el estándar oficial **APA 7.ª edición** y **temas personalizados vía JSON (`theme.json`)** en formato **WordML (`.docx`)** y **PDF vectorial**.
 
 El principio rector del sistema es determinista: los criterios de evaluación o requisitos del documento gobiernan la estructura, y un auditor estático verifica el XML resultante antes de entregarlo.
 
@@ -10,9 +10,9 @@ El principio rector del sistema es determinista: los criterios de evaluación o 
 
 ## Capacidades Principales
 
-1. **Motores Multi-Propósito y Sistema de Temas (`plantillas/temas.py`, `formato_institucional.py`, `apa_docx.py`):**
-   - **5 presets integrados:** `apa7`, `academico`, `tecnico`, `ejecutivo` e `ieee`.
-   - **Temas institucionales/corporativos plug-and-play (`theme.json`):** configura colores, tipografía, interlineado, márgenes, encabezados, logos y banners sin tocar Python. Los temas privados con marcas propias se guardan en `themes/local/` (ignorados por Git).
+1. **Estándar APA 7 y Sistema de Temas JSON (`plantillas/temas.py`, `formato_institucional.py`, `apa_docx.py`):**
+   - **Preset oficial integrado (`apa7`):** norma APA 7.ª edición (papel US Letter, Times New Roman 12 pt, doble espacio, márgenes de 1", encabezados niveles 1–3 sin espaciado redundante, control de viudas/huérfanas, paginación superior derecha en Times New Roman 12 pt y tablas de 3 líneas).
+   - **Temas institucionales/personalizados (`theme.json`):** configura colores, tipografía, interlineado, márgenes, encabezados, logos y banners sin tocar Python, o extráelos automáticamente desde cualquier `.docx` con `./tareas temas --extraer`. Los temas privados se guardan en `themes/local/` (ignorados por Git).
 2. **Ingeniería OpenXML de Alta Fidelidad (`omml.py`, `bloques.py`, `visual.py`):**
    - **Ecuaciones matemáticas OMML vectoriales (`omml.py`):** convierte expresiones y comandos LaTeX a Unicode + XML OMML (`<m:oMathPara>`) compatible con Microsoft Word y LibreOffice (sin caracteres rotos ni desbordes horizontales).
    - **Bloques editoriales universales (`bloques.py`):** texto enriquecido Markdown (`**negrita**`, `*cursiva*`, `` `código inline` ``, superíndices/subíndices), párrafos estructurados sin estiramiento tipográfico, resúmenes ejecutivos con palabras clave, índices automáticos nativos (TOC), metadatos Core Properties y figuras con pies idempotentes.
@@ -77,13 +77,13 @@ from plantillas import bloques, formato_institucional as inst, omml
 doc = inst.nuevo_documento_tematico(
     titulo="Arquitectura de Microservicios",
     subtitulo="Especificación Técnica — RFC-01",
-    tema="tecnico",          # apa7 | academico | tecnico | ejecutivo | ieee | ruta/theme.json
+    tema="apa7",             # apa7 | nombre_tema | ruta/theme.json
     incluir_indice=True,
 )
-bloques.resumen_ejecutivo(doc, "Resumen ejecutivo del sistema.", palabras_clave=["RFC", "Arquitectura"])
+bloques.resumen_ejecutivo(doc, "Resumen ejecutivo del documento.", palabras_clave=["APA 7", "OpenXML"])
 inst.titulo_seccion(doc, "1. Modelo Matemático", nivel=1, criterios="C1")
 omml.formula_bloque(doc, r"\forall x \in \mathcal{S} : \text{Latencia}(x) \leq 50\text{ ms}", "Ecuación 1.")
-inst.guardar_documento(doc, "informe_tecnico.docx")
+inst.guardar_documento(doc, "informe_apa7.docx")
 ```
 
 ### 2. Extraer o crear tu propio tema institucional o corporativo
@@ -92,7 +92,7 @@ inst.guardar_documento(doc, "informe_tecnico.docx")
 ./tareas temas --extraer enunciado/plantilla.docx --nombre mi-universidad
 
 # O crear un molde manual en themes/local/ (ignorado por Git)
-./tareas temas --crear mi-universidad --base academico --local
+./tareas temas --crear mi-universidad --base apa7 --local
 ```
 El comando `--extraer` analiza el OpenXML del documento de referencia y genera `themes/local/mi-universidad/theme.json` con sus activos gráficos listos para usar con `tema="mi-universidad"`.
 
@@ -135,7 +135,7 @@ document_generator/
 ├── plantillas/                 # Paquete Python principal (PEP 517/621)
 │   ├── cli/                     # Despachador CLI y servicio LibreOffice aislado
 │   ├── motor_base.py            # Protocolo BaseDocumentEngine y registro de motores
-│   ├── temas.py                 # Presets (apa7, academico, tecnico, ejecutivo, ieee) y loader JSON
+│   ├── temas.py                 # Preset oficial (apa7) y loader de temas JSON (themes/ y themes/local/)
 │   ├── omml.py                  # Motor matemático LaTeX -> Unicode -> OMML vectorial
 │   ├── bloques.py               # Componentes editoriales universales (Markdown, TOC, tablas, resumen)
 │   ├── formato_institucional.py # Motor configurable multi-propósito
@@ -183,7 +183,7 @@ Este repositorio parte de la base de [JosephBano/rubric-driven](https://github.c
 
 Sobre esa base, **Jorge Doicela** adaptó y amplió el proyecto a sus necesidades con las siguientes incorporaciones técnicas:
 
-- **Arquitectura multi-motor y sistema de temas (`motor_base.py`, `temas.py`, `formato_institucional.py`, `extractor_tema.py`):** protocolo `BaseDocumentEngine`, 5 presets integrados (`apa7`, `academico`, `tecnico`, `ejecutivo`, `ieee`), soporte para temas JSON (`themes/` y `themes/local/`), extracción automática de estilos desde archivos `.docx` (`./tareas temas --extraer`) y portadas con autoría individual, grupal o corporativa.
+- **Arquitectura de motores y sistema de temas (`motor_base.py`, `temas.py`, `formato_institucional.py`, `extractor_tema.py`):** protocolo `BaseDocumentEngine`, preset oficial refinado `apa7`, soporte para temas JSON (`themes/` y `themes/local/`), extracción automática de estilos desde archivos `.docx` (`./tareas temas --extraer`), vistas previas (`preview_tema.py`) y portadas con autoría individual, grupal o corporativa.
 - **Ingeniería OpenXML, ecuaciones OMML y componentes visuales (`omml.py`, `bloques.py`, `visual.py`, `fuentes_comunes.py`):** conversión LaTeX a Unicode y OMML vectorial compatible con Word y LibreOffice, bloques editoriales con parseo Markdown, índices automáticos (TOC), tablas con layout fijo (`APA 7` y `Grid`), renderizadores de terminal/código a 300 DPI y utilidades de diagramas en `tools/`.
 - **Refactorización modular y empaquetado PEP 621 (`plantillas/`, `plantillas/cli/`, `pyproject.toml`, `Makefile`):** migración de `_plantillas/` a paquete Python instalable (`pip install -e .`), separación del CLI en submódulos, subcomandos `auditar` y `temas`, y auditoría estática ampliada para detectar fugas de LaTeX/Markdown y defectos visuales.
 - **Soporte multiplataforma, seguridad y ecosistema IA (`plataforma.py`, `setup.*`, `tareas.*`, `.githooks/`, `.agents/skills/`, `docs/`, `examples/`):** paridad Linux/macOS/Windows con CI en matriz Ubuntu/Windows, hook `pre-commit` contra fugas de secretos, exportación a Descargas opt-in, documentación técnica modular Docs-as-Code, skills especializadas para agentes IA y ampliación de la suite de pruebas (`tests/`).

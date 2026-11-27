@@ -6,7 +6,7 @@
 - **Estudiante:** Ana Pérez
 - **Fecha de entrega:** 2026-11-30
 - **Extensión:** 170 palabras
-- **Formato:** tecnico
+- **Formato:** apa7
 - **Estado:** lista
 
 ## Rúbrica

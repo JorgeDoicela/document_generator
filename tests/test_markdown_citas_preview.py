@@ -80,7 +80,7 @@ class TestEstilosCitacion(unittest.TestCase):
                 institucion="Org",
                 carrera="Ing",
                 nombre="Tester",
-                formato="ieee",
+                formato="apa7",
             )
             bib = self._poblar("ieee")
             apa_docx.titulo(doc, "1. Desarrollo", 1, criterios="C1")
@@ -108,7 +108,7 @@ class TestEstilosCitacion(unittest.TestCase):
                 institucion="Org",
                 carrera="Ing",
                 nombre="Tester",
-                formato="academico",
+                formato="apa7",
             )
             bib = self._poblar("vancouver")
             apa_docx.titulo(doc, "1. Desarrollo", 1, criterios="C1")
@@ -179,7 +179,7 @@ class TestCompiladorMarkdown(unittest.TestCase):
             ruta = markdown_docx.compilar_markdown(
                 ejemplo_dir / "documento.md",
                 salida=salida,
-                tema="ejecutivo",
+                tema="apa7",
                 estilo_citas="vancouver",
                 tarea=ejemplo_dir,
             )
@@ -194,19 +194,18 @@ class TestPreviewTema(unittest.TestCase):
 
     def test_generar_preview_presets_sin_anomalias(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            for preset in ("apa7", "tecnico", "ieee"):
-                salida = Path(tmp) / f"preview_{preset}.docx"
-                ruta = preview_tema.generar_preview_tema(preset, salida=salida)
-                self.assertTrue(ruta.is_file())
-                analisis = comp.analizar(ruta)
-                self.assertEqual(analisis.anomalias_formato, [])
-                self.assertEqual(analisis.avisos_tipograficos, [])
-                self.assertGreaterEqual(len(analisis.referencias), 2)
+            salida = Path(tmp) / "preview_apa7.docx"
+            ruta = preview_tema.generar_preview_tema("apa7", salida=salida)
+            self.assertTrue(ruta.is_file())
+            analisis = comp.analizar(ruta)
+            self.assertEqual(analisis.anomalias_formato, [])
+            self.assertEqual(analisis.avisos_tipograficos, [])
+            self.assertGreaterEqual(len(analisis.referencias), 2)
 
     def test_generar_previews_todos(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             rutas = preview_tema.generar_previews("todos", salida=Path(tmp))
-            self.assertGreaterEqual(len(rutas), 5)
+            self.assertGreaterEqual(len(rutas), 1)
             for r in rutas:
                 self.assertTrue(r.is_file())
 

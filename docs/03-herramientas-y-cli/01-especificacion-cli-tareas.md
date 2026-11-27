@@ -194,8 +194,8 @@ Gestiona los temas documentales del framework (`plantillas/temas.py`, `plantilla
   tareas temas --preview <tema|todos> [--salida <ruta>] [--citas apa7|ieee|vancouver] [--sin-pdf]
   ```
 * **Opciones:**
-  - *(sin opciones)*: Imprime los presets integrados (`apa7`, `academico`, `tecnico`, `ejecutivo`, `ieee`) y los temas detectados en `themes/` y `themes/local/`.
-  - `--crear <nombre>`: Crea un archivo `theme.json` editable heredando del preset `--base` (`academico` por defecto). Con `--local`, lo guarda en `themes/local/` (ignorado por Git).
+  - *(sin opciones)*: Imprime el preset oficial (`apa7`) y los temas detectados en `themes/` y `themes/local/`.
+  - `--crear <nombre>`: Crea un archivo `theme.json` editable heredando del preset `--base` (`apa7` por defecto). Con `--local`, lo guarda en `themes/local/` (ignorado por Git).
   - `--extraer <archivo.docx>`: Analiza el OpenXML del `.docx` suministrado e infiere márgenes, tipografía, interlineado, color primario, estilo de tabla (`grid`/`apa`) e imágenes embebidas (`header`, `logo_portada`, `banner_inferior`), generando el `theme.json` en `themes/local/<slug>/` por defecto (o en `themes/<slug>/` con `--compartido`).
   - `--nombre <slug>`: Identificador explícito del tema al usar `--extraer` (si se omite, se deriva del nombre del `.docx`).
   - `--preview <tema|todos>`: Genera un documento de muestra completo (`.docx` y `.pdf`, salvo `--sin-pdf`) en `themes/.previews/` (o en `--salida`) para validar visualmente portada, tipografía, OMML, tablas, código y referencias del tema.

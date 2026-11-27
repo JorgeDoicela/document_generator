@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """Motor Documental Institucional y Multi-Propósito configurable por temas.
 
-Permite generar informes académicos, técnicos/RFC, ejecutivos, artículos estilo IEEE
-o documentos con identidad corporativa/universitaria propia mediante objetos
-TemaDocumental (presets integrados o archivos theme.json).
+Permite generar documentos bajo el estándar APA 7 o con identidad institucional
+propia mediante objetos TemaDocumental (preset `apa7` o archivos `theme.json`).
 """
 import datetime
 import re
@@ -48,7 +47,7 @@ def _tema_de_doc(doc: Any, tema: Optional[TemaRef] = None) -> temas.TemaDocument
     meta = getattr(doc, "_rubric_driven", None)
     if isinstance(meta, dict) and isinstance(meta.get("tema"), temas.TemaDocumental):
         return meta["tema"]
-    return temas.cargar_tema("academico")
+    return temas.cargar_tema("apa7")
 
 
 def _set_numero_pagina(parrafo: Any, tema: temas.TemaDocumental) -> None:
@@ -130,7 +129,7 @@ def _aplicar_estilos_base(doc: Any, t: temas.TemaDocumental) -> None:
 
 def configurar_pagina(
     doc: Any,
-    tema: TemaRef = "academico",
+    tema: TemaRef = "apa7",
     imagen_header: Optional[Path] = None,
 ) -> Any:
     """Configura estilos base, márgenes, encabezado y pie de página de forma idempotente según el tema."""
@@ -177,7 +176,7 @@ def aplicar_portada(
     *,
     titulo: str,
     subtitulo: str = "",
-    tema: TemaRef = "academico",
+    tema: TemaRef = "apa7",
     institucion: Optional[str] = None,
     organizacion: Optional[str] = None,
     docente: Optional[str] = None,
@@ -278,7 +277,7 @@ def aplicar_portada(
     if es_grupal:
         etiqueta_autor = f"{(grupo or 'GRUPO DE TRABAJO').upper()} — INTEGRANTES:"
     else:
-        etiqueta_autor = "ESTUDIANTE:" if (t.nombre in ("academico", "apa7") or tarea is not None) else "AUTOR:"
+        etiqueta_autor = "ESTUDIANTE:" if (t.nombre == "apa7" or tarea is not None) else "AUTOR:"
 
     r_g = p_lbl.add_run(etiqueta_autor)
     r_g.bold = True
@@ -407,11 +406,11 @@ def nuevo_documento_tematico(
     titulo: str,
     subtitulo: str = "",
     *,
-    tema: TemaRef = "academico",
+    tema: TemaRef = "apa7",
     incluir_indice: bool = False,
     **kwargs: Any,
 ) -> Any:
-    """Crea un Document() inicializado con cualquier tema preset o theme.json."""
+    """Crea un Document() inicializado con `apa7` o cualquier archivo `theme.json` personalizado."""
     from docx import Document
 
     doc = Document()
@@ -432,9 +431,9 @@ def guardar_documento(doc: Any, salida: Union[Path, str]) -> Path:
 
 
 class MotorInstitucional:
-    """Motor documental genérico configurable por tema (implementa BaseDocumentEngine)."""
+    """Motor documental configurable por tema JSON (implementa BaseDocumentEngine)."""
 
-    def __init__(self, tema: TemaRef = "academico") -> None:
+    def __init__(self, tema: TemaRef = "apa7") -> None:
         self.tema = temas.cargar_tema(tema)
 
     def configurar_pagina(self, doc: Any, imagen_header: Optional[Path] = None, **kwargs: Any) -> Any:
@@ -454,32 +453,7 @@ class MotorInstitucional:
         marcar_transversal(doc, *criterios)
 
 
-class MotorTecnico(MotorInstitucional):
-    """Preset de motor para informes técnicos, laboratorios y especificaciones."""
-
-    def __init__(self) -> None:
-        super().__init__(tema="tecnico")
-
-
-class MotorEjecutivo(MotorInstitucional):
-    """Preset de motor para informes ejecutivos, propuestas y memorias corporativas."""
-
-    def __init__(self) -> None:
-        super().__init__(tema="ejecutivo")
-
-
-class MotorIEEE(MotorInstitucional):
-    """Preset de motor para artículos científico-técnicos estilo IEEE."""
-
-    def __init__(self) -> None:
-        super().__init__(tema="ieee")
-
-
-registrar_motor("academico", MotorInstitucional)
 registrar_motor("institucional", MotorInstitucional)
-registrar_motor("tecnico", MotorTecnico)
-registrar_motor("ejecutivo", MotorEjecutivo)
-registrar_motor("ieee", MotorIEEE)
 
 # Re-exportaciones de conveniencia para scripts que importen solo formato_institucional
 formula_bloque = omml.formula_bloque

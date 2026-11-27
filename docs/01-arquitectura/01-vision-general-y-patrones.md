@@ -81,7 +81,7 @@ El software está desacoplado en componentes con responsabilidades bien delimita
 | `cli/tablas.py` | Visualización tabular y estado agregado de tareas. | `cmd_estado()` |
 | `motor_base.py` | Protocolo base abstracto y catálogo de motores documentales. | `BaseDocumentEngine`, `registrar_motor()`, `obtener_motor()`, `marcar_elemento()` |
 | `apa_docx.py` | Motor de maquetación bajo el estándar formal APA 7 (`MotorAPA7`). | `nuevo_documento()`, `Bibliografia` |
-| `formato_institucional.py` | Motor multi-propósito configurable por temas (`MotorInstitucional`, `MotorTecnico`, `MotorEjecutivo`, `MotorIEEE`). | `nuevo_documento_tematico()`, `titulo_seccion()`, `marcar_transversal()` |
+| `formato_institucional.py` | Motor configurable por temas JSON (`MotorInstitucional`). | `nuevo_documento_tematico()`, `titulo_seccion()`, `marcar_transversal()` |
 | `temas.py` / `extractor_tema.py` | Presets documentales, carga JSON (`themes/` y `themes/local/`) y extracción automática desde `.docx`. | `cargar_tema()`, `listar_temas()`, `extraer_tema_desde_docx()` |
 | `omml.py` / `bloques.py` | Ecuaciones matemáticas OMML vectoriales y componentes editoriales universales. | `formula_bloque()`, `parrafo_estructurado()`, `enunciado_formal()`, `tabla_academica()` |
 | `rubrica.py` | Extracción de rúbricas desde DOCX, normalización y cálculo de pesos. | `leer()`, `importar_docx()`, `escribir()` |
