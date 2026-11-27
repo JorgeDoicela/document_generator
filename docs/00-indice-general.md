@@ -46,3 +46,11 @@ docs/
 | [09. Empaquetado PEP 621](04-infraestructura-y-portabilidad/01-empaquetado-pep621-y-entornos.md) | Instalación estándar editable, dependencias, calidad y entorno IDE. | `pyproject.toml`, `requirements.txt`, `.vscode/settings.json`, `Makefile` |
 | [10. Multiplataforma](04-infraestructura-y-portabilidad/02-soporte-multiplataforma.md) | Scripts de aprovisionamiento en Linux, macOS y Windows. | `setup.sh`, `setup.bat`, `plantillas/cli/servicio_pdf.py` |
 | [11. Seguridad y Hooks](04-infraestructura-y-portabilidad/03-seguridad-y-githooks.md) | Controles preventivos contra fugas de `.env`, `materias/` y credenciales. | `.githooks/pre-commit`, `.env.example`, `.gitignore` |
+
+---
+
+## 3. Procedencia y Licencia
+
+Este proyecto deriva de [JosephBano/rubric-driven](https://github.com/JosephBano/rubric-driven) (autor original: **Joseph Andrés Baño Naranjo**) y ha sido adaptado y extendido por **Jorge Doicela** bajo los mismos términos de la licencia MIT, manteniendo intacto el aviso de derechos de autor original en [LICENSE](../LICENSE).
+
+- [Volver al README](../README.md)

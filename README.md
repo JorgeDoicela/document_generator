@@ -4,6 +4,8 @@ Framework programático en Python para la generación, estructuración y auditor
 
 El principio rector del sistema es determinista: los criterios de evaluación o requisitos del documento gobiernan la estructura, y un auditor estático verifica el XML resultante antes de entregarlo.
 
+> **Nota de procedencia:** Este proyecto nace como una derivación y extensión adaptada a partir de [rubric-driven](https://github.com/JosephBano/rubric-driven), creado originalmente por **Joseph Andrés Baño Naranjo** bajo licencia MIT. Consulta la sección [Origen del Proyecto y Adaptaciones](#origen-del-proyecto-y-adaptaciones) para el detalle técnico de los cambios incorporados.
+
 ---
 
 ## Capacidades Principales
@@ -35,7 +37,7 @@ El principio rector del sistema es determinista: los criterios de evaluación o 
 
 ### Linux y macOS
 ```bash
-git clone <URL_DEL_REPOSITORIO> && cd document_generator
+git clone https://github.com/JorgeDoicela/document_generator.git && cd document_generator
 ./setup.sh
 cp .env.example .env      # editar con tus datos
 ./tareas verificar
@@ -144,12 +146,39 @@ document_generator/
 
 ---
 
+## Documentación Técnica
+
+La arquitectura interna, contratos del CLI, motores documentales y guías de infraestructura se mantienen en el catálogo modular Docs-as-Code:
+
+- [Documentación Técnica Completa](docs/00-indice-general.md)
+  - [01. Arquitectura y Modelo de Fichas](docs/01-arquitectura/01-vision-general-y-patrones.md)
+  - [02. Motores Documentales, Temas y Componentes Visuales](docs/02-motores-documentales/00-arquitectura-motores-base.md)
+  - [03. Especificación CLI y Auditoría Estática](docs/03-herramientas-y-cli/01-especificacion-cli-tareas.md)
+  - [04. Empaquetado PEP 621, Multiplataforma y Seguridad](docs/04-infraestructura-y-portabilidad/01-empaquetado-pep621-y-entornos.md)
+
+---
+
 ## Seguridad, Privacidad y Contribuciones
 
 - `.env`, `materias/*` (excepto `materias/.gitkeep`) y `themes/local/` están excluidos en `.gitignore` y protegidos por `.githooks/pre-commit`.
 - La copia automática de PDFs a la carpeta Descargas del sistema está **desactivada por defecto** (`COPIAR_PDF_DESCARGAS=false`); actívala explícitamente en tu `.env` si la necesitas.
 - Consulta [CONTRIBUTING.md](CONTRIBUTING.md) para contribuir mejoras, nuevos presets o motores.
 
+---
+
+## Origen del Proyecto y Adaptaciones
+
+Este repositorio parte de la base de [JosephBano/rubric-driven](https://github.com/JosephBano/rubric-driven), proyecto original de **Joseph Andrés Baño Naranjo** (licencia MIT), del cual hereda el paradigma *rubric-driven*, la estructura de materias/tareas, la importación de rúbricas, el flujo base del CLI `tareas` y el núcleo inicial de generación APA 7 y auditoría sobre `.docx`.
+
+Sobre esa base, **Jorge Doicela** adaptó y amplió el proyecto a sus necesidades con las siguientes incorporaciones técnicas:
+
+- **Arquitectura multi-motor y sistema de temas (`motor_base.py`, `temas.py`, `formato_institucional.py`, `extractor_tema.py`):** protocolo `BaseDocumentEngine`, 5 presets integrados (`apa7`, `academico`, `tecnico`, `ejecutivo`, `ieee`), soporte para temas JSON (`themes/` y `themes/local/`), extracción automática de estilos desde archivos `.docx` (`./tareas temas --extraer`) y portadas con autoría individual, grupal o corporativa.
+- **Ingeniería OpenXML, ecuaciones OMML y componentes visuales (`omml.py`, `bloques.py`, `visual.py`, `fuentes_comunes.py`):** conversión LaTeX a Unicode y OMML vectorial compatible con Word y LibreOffice, bloques editoriales con parseo Markdown, índices automáticos (TOC), tablas con layout fijo (`APA 7` y `Grid`), renderizadores de terminal/código a 300 DPI y utilidades de diagramas en `tools/`.
+- **Refactorización modular y empaquetado PEP 621 (`plantillas/`, `plantillas/cli/`, `pyproject.toml`, `Makefile`):** migración de `_plantillas/` a paquete Python instalable (`pip install -e .`), separación del CLI en submódulos, subcomandos `auditar` y `temas`, y auditoría estática ampliada para detectar fugas de LaTeX/Markdown y defectos visuales.
+- **Soporte multiplataforma, seguridad y ecosistema IA (`plataforma.py`, `setup.*`, `tareas.*`, `.githooks/`, `.agents/skills/`, `docs/`, `examples/`):** paridad Linux/macOS/Windows con CI en matriz Ubuntu/Windows, hook `pre-commit` contra fugas de secretos, exportación a Descargas opt-in, documentación técnica modular Docs-as-Code, skills especializadas para agentes IA y ampliación de la suite de pruebas (`tests/`).
+
+---
+
 ## Licencia
 
-Distribuido bajo licencia [MIT](LICENSE).
+El software base original es obra de **Joseph Andrés Baño Naranjo** y se distribuye bajo la licencia [MIT](LICENSE). Las adaptaciones, refactorizaciones y extensiones incorporadas en este repositorio por **Jorge Doicela** se distribuyen bajo los mismos términos de la licencia MIT, preservando intacto el aviso de derechos de autor y permisos original en [LICENSE](LICENSE).
